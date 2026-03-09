@@ -1,0 +1,9 @@
+{
+  "name": "stratus-spoon-v2-functions",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "echo \"Add functions linting here\"",
+    "serve": "echo \"Wire Firebase emulator here\""
+  }
+}

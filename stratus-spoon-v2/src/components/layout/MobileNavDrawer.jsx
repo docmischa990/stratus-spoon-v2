@@ -1,0 +1,92 @@
+import { Link, NavLink } from 'react-router-dom'
+import { Button } from '@/components/ui/Button'
+import { useAuth } from '@/context/useAuth'
+import { useUIStore } from '@/store/uiStore'
+import { cn } from '@/utils/cn'
+
+const navigation = [
+  { to: '/', label: 'Home' },
+  { to: '/recipes', label: 'Recipes' },
+  { to: '/create', label: 'Create recipe' },
+  { to: '/cookbook', label: 'Cookbook' },
+  { to: '/profile', label: 'Profile' },
+]
+
+export function MobileNavDrawer() {
+  const isOpen = useUIStore((state) => state.isMobileNavOpen)
+  const closeMobileNav = useUIStore((state) => state.closeMobileNav)
+  const { isAuthenticated, isLoading, logoutUser, user } = useAuth()
+
+  return (
+    <div
+      className={cn(
+        'fixed inset-0 z-40 bg-primary-dark/30 transition md:hidden',
+        isOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0',
+      )}
+      onClick={closeMobileNav}
+      aria-hidden={!isOpen}
+    >
+      <aside
+        className={cn(
+          'absolute right-0 top-0 flex h-full w-[84%] max-w-sm flex-col gap-6 border-l border-border bg-surface px-6 py-6 shadow-card transition',
+          isOpen ? 'translate-x-0' : 'translate-x-full',
+        )}
+        onClick={(event) => event.stopPropagation()}
+      >
+        <Link to="/" className="text-xl font-semibold text-primary-dark" onClick={closeMobileNav}>
+          Stratus Spoon
+        </Link>
+        <nav className="flex flex-col gap-2">
+          {navigation.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              onClick={closeMobileNav}
+              className={({ isActive }) =>
+                cn(
+                  'rounded-xl px-4 py-3 text-sm font-medium text-text-muted hover:bg-primary-dark/5 hover:text-primary-dark',
+                  isActive && 'bg-primary-dark/5 text-primary-dark',
+                )
+              }
+            >
+              {item.label}
+            </NavLink>
+          ))}
+        </nav>
+        <div className="mt-auto flex flex-col gap-3">
+          {isLoading ? (
+            <p className="text-sm text-text-muted">Loading session…</p>
+          ) : isAuthenticated ? (
+            <>
+              <div className="rounded-2xl bg-surface-muted px-4 py-3">
+                <p className="text-sm font-semibold text-primary-dark">{user?.displayName || user?.email}</p>
+                <p className="text-xs text-text-muted">Signed in</p>
+              </div>
+              <Button as={Link} to="/cookbook" variant="ghost" onClick={closeMobileNav}>
+                My cookbook
+              </Button>
+              <Button
+                type="button"
+                onClick={async () => {
+                  await logoutUser()
+                  closeMobileNav()
+                }}
+              >
+                Log out
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button as={Link} to="/login" variant="ghost" onClick={closeMobileNav}>
+                Log in
+              </Button>
+              <Button as={Link} to="/signup" onClick={closeMobileNav}>
+                Create account
+              </Button>
+            </>
+          )}
+        </div>
+      </aside>
+    </div>
+  )
+}
