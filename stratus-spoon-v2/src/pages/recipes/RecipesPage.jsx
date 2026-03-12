@@ -7,22 +7,16 @@ import { useRecipes } from '@/hooks/useRecipes'
 import { useUIStore } from '@/store/uiStore'
 
 export function RecipesPage() {
-  const { data: recipes = [], isLoading, isError } = useRecipes()
   const searchQuery = useUIStore((state) => state.searchQuery)
   const filters = useUIStore((state) => state.filters)
+  const { data: recipes = [], error, isLoading, isError } = useRecipes(searchQuery)
 
   const filteredRecipes = recipes.filter((recipe) => {
-    const matchesSearch =
-      searchQuery.length === 0 ||
-      `${recipe.title} ${recipe.description} ${recipe.tags.join(' ')}`
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase())
-
     const matchesCategory = filters.category === 'All' || recipe.category === filters.category
     const matchesTag = filters.tag === 'Any' || recipe.tags.includes(filters.tag)
     const matchesSource = filters.source === 'All' || recipe.sourceType === filters.source
 
-    return matchesSearch && matchesCategory && matchesTag && matchesSource
+    return matchesCategory && matchesTag && matchesSource
   })
 
   return (
@@ -46,14 +40,15 @@ export function RecipesPage() {
             <div className="card-base p-6">
               <h3 className="text-xl font-semibold">Unable to load recipes</h3>
               <p className="mt-3 text-sm leading-6 text-text-muted">
-                Check your Firebase configuration and Firestore indexes, then try again.
+                {error?.message ||
+                  'Check your Firebase configuration, Firestore indexes, and recipe proxy configuration, then try again.'}
               </p>
             </div>
           ) : filteredRecipes.length === 0 ? (
             <div className="card-base p-6">
               <h3 className="text-xl font-semibold">No recipes match those filters</h3>
               <p className="mt-3 text-sm leading-6 text-text-muted">
-                Adjust your query or add some internal recipes to Firestore to populate this view.
+                Adjust your query, update filters, or add internal recipes to Firestore to populate this view.
               </p>
             </div>
           ) : (

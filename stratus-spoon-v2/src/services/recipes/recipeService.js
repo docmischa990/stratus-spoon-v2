@@ -12,10 +12,19 @@ import {
   updateDoc,
   where,
 } from 'firebase/firestore'
-import { getDownloadURL, ref, uploadBytes } from 'firebase/storage'
+import { httpsCallable } from 'firebase/functions'
 import { mockRecipes } from '@/data/mockRecipes'
-import { firebaseAuth, firestoreDb, firebaseStorage, isFirebaseConfigured } from '@/lib/firebase'
+import {
+  firebaseAuth,
+  firestoreDb,
+  firebaseFunctions,
+  isFirebaseConfigured,
+} from '@/lib/firebase/firebase'
+import { uploadRecipeImage as uploadRecipeImageToStorage } from '@/services/firebase/storageService'
 import { adjustProfileCounters } from '@/services/profiles/profileCounters'
+
+const FALLBACK_IMAGE =
+  'https://images.unsplash.com/photo-1495521821757-a1efb6729352?auto=format&fit=crop&w=1200&q=80'
 
 function wait(ms = 180) {
   return new Promise((resolve) => {
@@ -59,10 +68,7 @@ function normalizeRecipe(docId, data) {
     id: docId,
     title: data.title ?? 'Untitled recipe',
     description: data.description ?? '',
-    image:
-      data.image?.url ??
-      data.imageUrl ??
-      'https://images.unsplash.com/photo-1495521821757-a1efb6729352?auto=format&fit=crop&w=1200&q=80',
+    image: data.image?.url ?? data.imageUrl ?? FALLBACK_IMAGE,
     category: data.category ?? 'Recipe',
     tags: normalizeList(data.tags),
     sourceType: data.sourceType ?? 'internal',
@@ -80,13 +86,82 @@ function getMockInternalRecipes() {
   return mockRecipes.filter((recipe) => recipe.sourceType === 'internal')
 }
 
-async function listRecipesFromFirestore() {
+function filterRecipesByQuery(recipes, searchQuery) {
+  if (!searchQuery?.trim()) {
+    return recipes
+  }
+
+  const normalizedQuery = searchQuery.toLowerCase()
+
+  return recipes.filter((recipe) =>
+    `${recipe.title} ${recipe.description} ${recipe.tags.join(' ')} ${recipe.ingredients.join(' ')}`
+      .toLowerCase()
+      .includes(normalizedQuery),
+  )
+}
+
+function createRecipeLoadError(error) {
+  if (error?.code === 'failed-precondition') {
+    return new Error(
+      'Firestore index missing for the recipes query. Deploy firestore.indexes.json or create the suggested composite index in the Firebase console.',
+    )
+  }
+
+  if (error?.code === 'permission-denied') {
+    return new Error(
+      'Firestore denied recipe reads. Ensure the recipe has visibility set to public or ownerId matches the signed-in user.',
+    )
+  }
+
+  return new Error(error?.message || 'Unable to load recipes from Firestore.')
+}
+
+function normalizeExternalRecipe(recipe) {
+  return {
+    id: recipe.id,
+    title: recipe.title ?? 'External recipe',
+    description: recipe.description ?? '',
+    image: recipe.image ?? FALLBACK_IMAGE,
+    category: recipe.category ?? 'External',
+    tags: normalizeList(recipe.tags),
+    sourceType: 'external',
+    cookingTime: recipe.cookingTime ?? 'Flexible',
+    notes: recipe.notes ?? '',
+    ingredients: normalizeList(recipe.ingredients),
+    steps: normalizeList(recipe.steps),
+    ownerId: null,
+    visibility: 'public',
+    slug: recipe.slug ?? recipe.id,
+    externalId: recipe.externalId ?? String(recipe.id).replace('external:', ''),
+  }
+}
+
+async function fetchExternalRecipeSearch(searchQuery) {
+  if (!firebaseFunctions || !searchQuery?.trim()) {
+    return []
+  }
+
+  const callable = httpsCallable(firebaseFunctions, 'searchRecipes')
+  const response = await callable({ query: searchQuery })
+  return normalizeList(response.data?.results).map(normalizeExternalRecipe)
+}
+
+async function fetchExternalRecipeById(recipeId) {
+  if (!firebaseFunctions) {
+    return null
+  }
+
+  const callable = httpsCallable(firebaseFunctions, 'getExternalRecipe')
+  const response = await callable({ recipeId })
+  return response.data?.recipe ? normalizeExternalRecipe(response.data.recipe) : null
+}
+
+async function listRecipesFromFirestore(searchQuery = '') {
   const recipesRef = collection(firestoreDb, 'recipes')
   const currentUserId = firebaseAuth?.currentUser?.uid ?? null
 
   const publicRecipesQuery = query(
     recipesRef,
-    where('sourceType', '==', 'internal'),
     where('visibility', '==', 'public'),
     orderBy('createdAt', 'desc'),
     limit(24),
@@ -96,7 +171,7 @@ async function listRecipesFromFirestore() {
   const recipes = publicSnapshot.docs.map((recipeDoc) => normalizeRecipe(recipeDoc.id, recipeDoc.data()))
 
   if (!currentUserId) {
-    return recipes
+    return filterRecipesByQuery(recipes, searchQuery)
   }
 
   const ownerRecipesQuery = query(
@@ -119,7 +194,7 @@ async function listRecipesFromFirestore() {
     mergedRecipes.set(recipe.id, recipe)
   })
 
-  return Array.from(mergedRecipes.values())
+  return filterRecipesByQuery(Array.from(mergedRecipes.values()), searchQuery)
 }
 
 async function getRecipeByIdFromFirestore(recipeId) {
@@ -150,27 +225,6 @@ function parseLineItems(value) {
     .split('\n')
     .map((entry) => entry.trim())
     .filter(Boolean)
-}
-
-async function uploadRecipeImage({ ownerId, recipeId, imageFile }) {
-  if (!firebaseStorage || !imageFile) {
-    return null
-  }
-
-  const safeName = imageFile.name.replace(/[^a-zA-Z0-9.-]/g, '-')
-  const imageRef = ref(firebaseStorage, `recipe-images/${ownerId}/${recipeId}/${Date.now()}-${safeName}`)
-
-  await uploadBytes(imageRef, imageFile, {
-    contentType: imageFile.type,
-  })
-
-  const url = await getDownloadURL(imageRef)
-
-  return {
-    storagePath: imageRef.fullPath,
-    url,
-    type: 'upload',
-  }
 }
 
 function buildRecipePayload({ formValues, ownerId }) {
@@ -258,6 +312,20 @@ export async function createRecipe({ formValues, imageFile }) {
   return recipeRef.id
 }
 
+async function uploadRecipeImage({ ownerId, recipeId, imageFile }) {
+  if (!imageFile) {
+    return null
+  }
+
+  const uploadedImage = await uploadRecipeImageToStorage({
+      ownerId,
+      recipeId,
+      imageFile,
+    })
+
+  return uploadedImage
+}
+
 export async function updateRecipe({ recipeId, formValues, imageFile }) {
   if (!firebaseAuth?.currentUser || !firestoreDb) {
     throw new Error('You must be logged in with Firebase configured to edit a recipe.')
@@ -315,18 +383,36 @@ export async function deleteRecipe(recipeId) {
   await adjustProfileCounters(ownerId, { recipeCount: -1 })
 }
 
-export async function listRecipes() {
+export async function listRecipes(searchQuery = '') {
+  let internalRecipes
+
   if (isFirebaseConfigured && firestoreDb) {
-    return listRecipesFromFirestore()
+    try {
+      internalRecipes = await listRecipesFromFirestore(searchQuery)
+    } catch (error) {
+      throw createRecipeLoadError(error)
+    }
+  } else {
+    await wait()
+    internalRecipes = filterRecipesByQuery(getMockInternalRecipes(), searchQuery)
   }
 
-  await wait()
-  return getMockInternalRecipes()
+  const externalRecipes = await fetchExternalRecipeSearch(searchQuery).catch(() => [])
+
+  return [...internalRecipes, ...externalRecipes]
 }
 
 export async function getRecipeById(recipeId) {
+  if (String(recipeId).startsWith('external:')) {
+    return fetchExternalRecipeById(recipeId)
+  }
+
   if (isFirebaseConfigured && firestoreDb) {
-    return getRecipeByIdFromFirestore(recipeId)
+    try {
+      return await getRecipeByIdFromFirestore(recipeId)
+    } catch (error) {
+      throw createRecipeLoadError(error)
+    }
   }
 
   await wait()

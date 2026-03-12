@@ -5,8 +5,8 @@ import {
   signOut,
   updateProfile,
 } from 'firebase/auth'
-import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore'
-import { firebaseAuth, firestoreDb, isFirebaseConfigured } from '@/lib/firebase'
+import { createUserProfile } from '@/services/firebase/firestoreService'
+import { firebaseAuth, isFirebaseConfigured } from '@/lib/firebase/firebase'
 
 function getConfigError() {
   const error = new Error('Firebase is not configured. Add the required Vite environment variables.')
@@ -38,52 +38,13 @@ export function subscribeToAuthState(callback) {
   })
 }
 
-async function ensureUserProfileDocument(user, displayName = user.displayName ?? '') {
-  if (!firestoreDb) {
-    return
-  }
-
-  const userRef = doc(firestoreDb, 'users', user.uid)
-  const existingSnapshot = await getDoc(userRef)
-
-  if (existingSnapshot.exists()) {
-    await setDoc(
-      userRef,
-      {
-        email: user.email,
-        displayName: user.displayName ?? displayName,
-        updatedAt: serverTimestamp(),
-      },
-      { merge: true },
-    )
-    return
-  }
-
-  await setDoc(userRef, {
-    uid: user.uid,
-    email: user.email,
-    displayName: user.displayName ?? displayName,
-    photoURL: user.photoURL ?? null,
-    bio: '',
-    recipeCount: 0,
-    favoriteRecipeCount: 0,
-    collectionCount: 0,
-    preferences: {
-      dietaryTags: [],
-      theme: null,
-    },
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-  })
-}
-
 export async function loginWithEmail({ email, password }) {
   if (!firebaseAuth) {
     throw getConfigError()
   }
 
   const credentials = await signInWithEmailAndPassword(firebaseAuth, email, password)
-  await ensureUserProfileDocument(credentials.user)
+  await createUserProfile(credentials.user)
 
   return mapAuthUser(credentials.user)
 }
@@ -99,7 +60,7 @@ export async function signupWithEmail({ email, password, displayName }) {
     await updateProfile(credentials.user, { displayName })
   }
 
-  await ensureUserProfileDocument(credentials.user, displayName)
+  await createUserProfile(credentials.user, { displayName })
 
   return mapAuthUser(credentials.user)
 }

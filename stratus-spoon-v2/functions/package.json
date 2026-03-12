@@ -2,8 +2,14 @@
   "name": "stratus-spoon-v2-functions",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": "20"
+  },
   "scripts": {
     "lint": "echo \"Add functions linting here\"",
     "serve": "echo \"Wire Firebase emulator here\""
+  },
+  "dependencies": {
+    "firebase-functions": "^6.4.0"
   }
 }

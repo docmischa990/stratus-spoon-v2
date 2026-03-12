@@ -12,7 +12,7 @@ export function SearchBar() {
       <input
         type="search"
         className="w-full bg-transparent text-sm text-text outline-none placeholder:text-text-muted/70"
-        placeholder="Search by title, ingredient, or tag"
+        placeholder="Search internal recipes or Spoonacular results"
         value={searchQuery}
         onChange={(event) => setSearchQuery(event.target.value)}
       />

@@ -180,3 +180,38 @@ AI agents must:
 * Follow the project architecture rules
 
 ---
+
+# Firestore Recipe Seed Shape
+
+If you manually add a recipe document in Firestore and want it to appear on the recipes page,
+the document must satisfy the current internal query and security rule assumptions.
+
+Minimum recommended shape:
+
+```json
+{
+  "title": "Test Pasta",
+  "slug": "test-pasta",
+  "description": "A manually seeded recipe for Firestore testing.",
+  "category": "Dinner",
+  "tags": ["Test"],
+  "ingredients": ["200g pasta", "salt"],
+  "steps": [{ "id": "step-1", "text": "Boil pasta" }],
+  "notes": "Seed data",
+  "sourceType": "internal",
+  "visibility": "public",
+  "ownerId": "YOUR_FIREBASE_AUTH_UID",
+  "createdAt": "Firestore Timestamp",
+  "updatedAt": "Firestore Timestamp",
+  "image": null
+}
+```
+
+Important notes:
+
+* `sourceType` must be `internal`
+* `visibility` must be `public` unless you are signed in as the matching `ownerId`
+* `createdAt` should be a real Firestore timestamp because the browse query orders by it
+* the current browse queries require composite indexes defined in `firestore.indexes.json`
+
+---

@@ -15,10 +15,10 @@ function patchRecipeInList(recipes, recipeId, updater) {
   return recipes.map((recipe) => (recipe.id === recipeId ? updater(recipe) : recipe))
 }
 
-export function useRecipes() {
+export function useRecipes(searchQuery = '') {
   return useQuery({
-    queryKey: ['recipes'],
-    queryFn: listRecipes,
+    queryKey: ['recipes', searchQuery],
+    queryFn: () => listRecipes(searchQuery),
   })
 }
 
