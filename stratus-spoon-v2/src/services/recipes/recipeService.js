@@ -79,6 +79,7 @@ function normalizeRecipe(docId, data) {
     ownerId: data.ownerId ?? null,
     visibility: data.visibility ?? 'public',
     slug: data.slug ?? docId,
+    sourceId: data.sourceId ?? null,
   }
 }
 
@@ -124,7 +125,7 @@ function normalizeExternalRecipe(recipe) {
     image: recipe.image ?? FALLBACK_IMAGE,
     category: recipe.category ?? 'External',
     tags: normalizeList(recipe.tags),
-    sourceType: 'external',
+    sourceType: 'api',
     cookingTime: recipe.cookingTime ?? 'Flexible',
     notes: recipe.notes ?? '',
     ingredients: normalizeList(recipe.ingredients),
@@ -133,17 +134,71 @@ function normalizeExternalRecipe(recipe) {
     visibility: 'public',
     slug: recipe.slug ?? recipe.id,
     externalId: recipe.externalId ?? String(recipe.id).replace('external:', ''),
+    sourceId: recipe.sourceId ?? recipe.externalId ?? String(recipe.id).replace('external:', ''),
   }
 }
 
-async function fetchExternalRecipeSearch(searchQuery) {
-  if (!firebaseFunctions || !searchQuery?.trim()) {
-    return []
+function buildImportedRecipePayload(recipe, ownerId) {
+  return {
+    title: recipe.title,
+    slug: recipe.slug,
+    description: recipe.description ?? '',
+    ingredients: normalizeList(recipe.ingredients),
+    steps: normalizeList(recipe.steps).map((step, index) => ({
+      id: `step-${index + 1}`,
+      text: typeof step === 'string' ? step : step.text ?? '',
+    })),
+    notes: recipe.notes ?? '',
+    category: recipe.category ?? 'Recipe',
+    tags: normalizeList(recipe.tags),
+    sourceType: 'internal',
+    ownerId,
+    visibility: 'public',
+    sourceId: recipe.sourceId ?? recipe.externalId ?? String(recipe.id).replace('external:', ''),
+    cookingTime: recipe.cookingTime ?? 'Flexible',
+    image: recipe.image
+      ? {
+          url: recipe.image,
+          storagePath: null,
+          type: 'external',
+        }
+      : null,
+  }
+}
+
+function normalizeExternalFilters(filters = {}) {
+  return {
+    category: filters.category ?? 'All',
+    cuisine: filters.cuisine ?? 'Any',
+    diet: filters.diet ?? 'Any',
+    maxReadyTime: filters.maxReadyTime ?? 'Any',
+    sort: filters.sort ?? 'popularity',
+  }
+}
+
+async function fetchExternalRecipeSearch(searchQuery, filters = {}, offset = 0) {
+  if (!firebaseFunctions) {
+    return {
+      recipes: [],
+      totalResults: 0,
+      hasMore: false,
+      nextOffset: offset,
+    }
   }
 
   const callable = httpsCallable(firebaseFunctions, 'searchRecipes')
-  const response = await callable({ query: searchQuery })
-  return normalizeList(response.data?.results).map(normalizeExternalRecipe)
+  const normalizedFilters = normalizeExternalFilters(filters)
+  const response = await callable({ query: searchQuery, filters: normalizedFilters, offset })
+  const recipes = normalizeList(response.data?.results).map(normalizeExternalRecipe)
+  const totalResults = response.data?.totalResults ?? recipes.length
+  const nextOffset = offset + recipes.length
+
+  return {
+    recipes,
+    totalResults,
+    hasMore: nextOffset < totalResults,
+    nextOffset,
+  }
 }
 
 async function fetchExternalRecipeById(recipeId) {
@@ -154,6 +209,32 @@ async function fetchExternalRecipeById(recipeId) {
   const callable = httpsCallable(firebaseFunctions, 'getExternalRecipe')
   const response = await callable({ recipeId })
   return response.data?.recipe ? normalizeExternalRecipe(response.data.recipe) : null
+}
+
+function getRecipeIdentity(recipe) {
+  if (recipe.sourceType === 'api') {
+    return recipe.sourceId ?? recipe.externalId ?? String(recipe.id).replace('external:', '')
+  }
+
+  return recipe.id
+}
+
+function mergeRecipeCollections(...collections) {
+  const merged = new Map()
+
+  collections.flat().forEach((recipe) => {
+    if (!recipe) {
+      return
+    }
+
+    const identity = getRecipeIdentity(recipe)
+
+    if (!merged.has(identity) || String(recipe.id).startsWith('external:')) {
+      merged.set(identity, recipe)
+    }
+  })
+
+  return Array.from(merged.values())
 }
 
 async function listRecipesFromFirestore(searchQuery = '') {
@@ -312,6 +393,39 @@ export async function createRecipe({ formValues, imageFile }) {
   return recipeRef.id
 }
 
+export async function importExternalRecipe(recipe) {
+  if (!firebaseAuth?.currentUser || !firestoreDb) {
+    throw new Error('You must be logged in with Firebase configured to save a Spoonacular recipe.')
+  }
+
+  const ownerId = firebaseAuth.currentUser.uid
+  const sourceId = recipe.sourceId ?? recipe.externalId ?? String(recipe.id).replace('external:', '')
+  const recipesRef = collection(firestoreDb, 'recipes')
+  const duplicateQuery = query(
+    recipesRef,
+    where('ownerId', '==', ownerId),
+    where('sourceType', '==', 'internal'),
+    where('sourceId', '==', sourceId),
+    limit(1),
+  )
+  const duplicateSnapshot = await getDocs(duplicateQuery)
+
+  if (!duplicateSnapshot.empty) {
+    return duplicateSnapshot.docs[0].id
+  }
+
+  const recipePayload = buildImportedRecipePayload(recipe, ownerId)
+  const recipeRef = await addDoc(recipesRef, {
+    ...recipePayload,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  })
+
+  await adjustProfileCounters(ownerId, { recipeCount: 1 })
+
+  return recipeRef.id
+}
+
 async function uploadRecipeImage({ ownerId, recipeId, imageFile }) {
   if (!imageFile) {
     return null
@@ -383,23 +497,35 @@ export async function deleteRecipe(recipeId) {
   await adjustProfileCounters(ownerId, { recipeCount: -1 })
 }
 
-export async function listRecipes(searchQuery = '') {
-  let internalRecipes
+export async function listRecipes({ searchQuery = '', filters = {}, externalOffset = 0 } = {}) {
+  let internalRecipes = []
 
-  if (isFirebaseConfigured && firestoreDb) {
-    try {
-      internalRecipes = await listRecipesFromFirestore(searchQuery)
-    } catch (error) {
-      throw createRecipeLoadError(error)
+  if (externalOffset === 0) {
+    if (isFirebaseConfigured && firestoreDb) {
+      try {
+        internalRecipes = await listRecipesFromFirestore(searchQuery)
+      } catch (error) {
+        throw createRecipeLoadError(error)
+      }
+    } else {
+      await wait()
+      internalRecipes = filterRecipesByQuery(getMockInternalRecipes(), searchQuery)
     }
-  } else {
-    await wait()
-    internalRecipes = filterRecipesByQuery(getMockInternalRecipes(), searchQuery)
   }
 
-  const externalRecipes = await fetchExternalRecipeSearch(searchQuery).catch(() => [])
+  const externalPayload = await fetchExternalRecipeSearch(searchQuery, filters, externalOffset).catch(() => ({
+    recipes: [],
+    totalResults: 0,
+    hasMore: false,
+    nextOffset: externalOffset,
+  }))
 
-  return [...internalRecipes, ...externalRecipes]
+  return {
+    recipes: mergeRecipeCollections(internalRecipes, externalPayload.recipes),
+    totalResults: externalPayload.totalResults,
+    hasMore: externalPayload.hasMore,
+    nextOffset: externalPayload.nextOffset,
+  }
 }
 
 export async function getRecipeById(recipeId) {

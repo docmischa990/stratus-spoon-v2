@@ -1,8 +1,13 @@
 import { createContext, useEffect, useMemo, useState } from 'react'
 import {
+  confirmPhoneVerificationCode,
   getAuthStatus,
+  loginWithGithub,
+  loginWithGoogle,
   loginWithEmail,
   logoutUser,
+  resetPhoneVerification,
+  sendPhoneVerificationCode,
   signupWithEmail,
   subscribeToAuthState,
 } from '@/services/firebase/authService'
@@ -49,6 +54,11 @@ export function AuthProvider({ children }) {
       isLoading: status === 'loading',
       isAuthenticated: Boolean(user),
       loginWithEmail,
+      loginWithGoogle,
+      loginWithGithub,
+      sendPhoneVerificationCode,
+      confirmPhoneVerificationCode,
+      resetPhoneVerification,
       signupWithEmail,
       logoutUser,
     }),

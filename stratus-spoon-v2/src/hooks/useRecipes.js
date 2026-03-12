@@ -1,8 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   createRecipe,
   deleteRecipe,
   getRecipeById,
+  importExternalRecipe,
   listRecipes,
   updateRecipe,
 } from '@/services/recipes/recipeService'
@@ -15,10 +16,12 @@ function patchRecipeInList(recipes, recipeId, updater) {
   return recipes.map((recipe) => (recipe.id === recipeId ? updater(recipe) : recipe))
 }
 
-export function useRecipes(searchQuery = '') {
-  return useQuery({
-    queryKey: ['recipes', searchQuery],
-    queryFn: () => listRecipes(searchQuery),
+export function useRecipes({ searchQuery = '', filters = {} } = {}) {
+  return useInfiniteQuery({
+    queryKey: ['recipes', searchQuery, filters],
+    queryFn: ({ pageParam = 0 }) => listRecipes({ searchQuery, filters, externalOffset: pageParam }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => (lastPage?.hasMore ? lastPage.nextOffset : undefined),
   })
 }
 
@@ -215,6 +218,23 @@ export function useDeleteRecipeMutation() {
       queryClient.invalidateQueries({ queryKey: ['cookbook'] })
       queryClient.invalidateQueries({ queryKey: ['profile'] })
       queryClient.removeQueries({ queryKey: ['recipes', recipeId] })
+    },
+  })
+}
+
+export function useImportExternalRecipeMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: importExternalRecipe,
+    onSuccess: async (recipeId) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['recipes'] }),
+        queryClient.invalidateQueries({ queryKey: ['cookbook'] }),
+        queryClient.invalidateQueries({ queryKey: ['profile'] }),
+      ])
+
+      return recipeId
     },
   })
 }

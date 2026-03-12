@@ -2,9 +2,14 @@ import { useState } from 'react'
 import { CollectionMembershipPanel } from '@/components/cookbook/CollectionMembershipPanel'
 import { Button } from '@/components/ui/Button'
 import { FavoriteToggleButton } from '@/components/cookbook/FavoriteToggleButton'
+import { useAuth } from '@/context/useAuth'
+import { useImportExternalRecipeMutation } from '@/hooks/useRecipes'
 
 export function RecipeHero({ recipe }) {
   const [isCollectionPanelOpen, setIsCollectionPanelOpen] = useState(false)
+  const { isAuthenticated } = useAuth()
+  const importRecipe = useImportExternalRecipeMutation()
+  const isLiveApiRecipe = recipe.sourceType === 'api' && String(recipe.id).startsWith('external:')
 
   return (
     <section className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
@@ -23,6 +28,16 @@ export function RecipeHero({ recipe }) {
         </div>
         <div className="flex flex-wrap gap-3">
           <FavoriteToggleButton recipe={recipe} variant="primary" />
+          {isLiveApiRecipe ? (
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={!isAuthenticated || importRecipe.isPending}
+              onClick={() => importRecipe.mutate(recipe)}
+            >
+              {!isAuthenticated ? 'Log in to import' : importRecipe.isPending ? 'Saving…' : 'Save to cookbook'}
+            </Button>
+          ) : null}
           <Button type="button" variant="secondary" onClick={() => setIsCollectionPanelOpen((value) => !value)}>
             {isCollectionPanelOpen ? 'Hide collections' : 'Add to collection'}
           </Button>
