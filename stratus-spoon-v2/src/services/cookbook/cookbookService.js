@@ -156,10 +156,12 @@ async function getCollections(userId) {
 
 export async function getCookbookSummary() {
   if (!isFirebaseConfigured || !firestoreDb || !firebaseAuth?.currentUser) {
-    const recipes = await listRecipes()
+    const recipesResponse = await listRecipes()
+    const recipes = Array.isArray(recipesResponse) ? recipesResponse : recipesResponse.recipes ?? []
 
     return {
       favorites: [],
+      favoriteRecipes: [],
       createdRecipes: recipes.filter((recipe) => recipe.sourceType === 'internal'),
       collections: [],
       isFallback: true,
@@ -175,6 +177,7 @@ export async function getCookbookSummary() {
 
   return {
     favorites,
+    favoriteRecipes: favorites,
     createdRecipes,
     collections,
     isFallback: false,
@@ -241,6 +244,17 @@ export async function createCollection({ name, description }) {
   })
 
   await adjustProfileCounters(userId, { collectionCount: 1 })
+}
+
+export async function updateCollection({ collectionId, name, description }) {
+  const userId = getCurrentUserId()
+  const collectionRef = doc(firestoreDb, 'users', userId, 'collections', collectionId)
+
+  await updateDoc(collectionRef, {
+    name: name.trim(),
+    description: description.trim(),
+    updatedAt: serverTimestamp(),
+  })
 }
 
 export async function deleteCollection(collectionId) {

@@ -9,7 +9,8 @@ const navigation = [
   { to: '/recipes', label: 'Recipes' },
   { to: '/create', label: 'Create' },
   { to: '/cookbook', label: 'Cookbook' },
-  { to: '/profile', label: 'Profile' },
+  { to: '/favorites', label: 'Favorites' },
+  { to: '/my-recipes', label: 'My Recipes' },
 ]
 
 export function Navbar() {
@@ -44,8 +45,8 @@ export function Navbar() {
                 <p className="text-sm font-semibold text-primary-dark">{user?.displayName || user?.email}</p>
                 <p className="text-xs text-text-muted">Authenticated</p>
               </div>
-              <Button as={Link} to="/cookbook" variant="ghost">
-                My cookbook
+              <Button as={Link} to="/profile" variant="ghost">
+                Profile
               </Button>
               <Button type="button" onClick={logoutUser}>
                 Log out

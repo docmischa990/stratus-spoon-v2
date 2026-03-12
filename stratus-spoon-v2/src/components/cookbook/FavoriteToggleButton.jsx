@@ -15,7 +15,7 @@ export function FavoriteToggleButton({ recipe, variant = 'ghost', className = ''
       disabled={toggleFavorite.isPending || !isAuthenticated}
       onClick={() => toggleFavorite.mutate(isFavorited)}
     >
-      {!isAuthenticated ? 'Log in to save' : toggleFavorite.isPending ? 'Saving…' : isFavorited ? 'Favorited' : 'Save recipe'}
+      {!isAuthenticated ? 'Log in to favorite' : toggleFavorite.isPending ? 'Saving…' : isFavorited ? 'Favorited' : 'Favorite'}
     </Button>
   )
 }

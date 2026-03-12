@@ -8,6 +8,7 @@ import {
   removeRecipeFromCollection,
   removeFavorite,
   saveFavorite,
+  updateCollection,
 } from '@/services/cookbook/cookbookService'
 
 function patchCollections(collections, collectionId, updater) {
@@ -217,6 +218,44 @@ export function useDeleteCollection() {
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['cookbook'] })
       queryClient.invalidateQueries({ queryKey: ['profile'] })
+    },
+  })
+}
+
+export function useUpdateCollection() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: updateCollection,
+    onMutate: async ({ collectionId, name, description }) => {
+      await queryClient.cancelQueries({ queryKey: ['cookbook'] })
+
+      const previousCookbook = queryClient.getQueryData(['cookbook'])
+
+      queryClient.setQueryData(['cookbook'], (current) =>
+        current
+          ? {
+              ...current,
+              collections: patchCollections(current.collections, collectionId, (collection) => ({
+                ...collection,
+                name: name.trim(),
+                description: description.trim(),
+              })),
+            }
+          : current,
+      )
+
+      return { previousCookbook }
+    },
+    onError: (_error, _variables, context) => {
+      if (!context) {
+        return
+      }
+
+      queryClient.setQueryData(['cookbook'], context.previousCookbook)
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['cookbook'] })
     },
   })
 }

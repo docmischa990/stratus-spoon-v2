@@ -1,12 +1,12 @@
 import { useState } from 'react'
-import { CollectionMembershipPanel } from '@/components/cookbook/CollectionMembershipPanel'
+import { CookbookFolderPickerModal } from '@/components/cookbook/CookbookFolderPickerModal'
 import { Button } from '@/components/ui/Button'
 import { FavoriteToggleButton } from '@/components/cookbook/FavoriteToggleButton'
 import { useAuth } from '@/context/useAuth'
 import { useImportExternalRecipeMutation } from '@/hooks/useRecipes'
 
 export function RecipeHero({ recipe }) {
-  const [isCollectionPanelOpen, setIsCollectionPanelOpen] = useState(false)
+  const [isFolderPickerOpen, setIsFolderPickerOpen] = useState(false)
   const { isAuthenticated } = useAuth()
   const importRecipe = useImportExternalRecipeMutation()
   const isLiveApiRecipe = recipe.sourceType === 'api' && String(recipe.id).startsWith('external:')
@@ -35,19 +35,23 @@ export function RecipeHero({ recipe }) {
               disabled={!isAuthenticated || importRecipe.isPending}
               onClick={() => importRecipe.mutate(recipe)}
             >
-              {!isAuthenticated ? 'Log in to import' : importRecipe.isPending ? 'Saving…' : 'Save to cookbook'}
+              {!isAuthenticated ? 'Log in to import' : importRecipe.isPending ? 'Saving…' : 'Add to My Recipes'}
             </Button>
           ) : null}
-          <Button type="button" variant="secondary" onClick={() => setIsCollectionPanelOpen((value) => !value)}>
-            {isCollectionPanelOpen ? 'Hide collections' : 'Add to collection'}
+          <Button type="button" variant="secondary" onClick={() => setIsFolderPickerOpen(true)}>
+            Add to Cookbook
           </Button>
           <Button variant="ghost">Edit later</Button>
         </div>
-        {isCollectionPanelOpen ? <CollectionMembershipPanel recipe={recipe} /> : null}
       </div>
       <div className="overflow-hidden rounded-3xl border border-border shadow-card">
         <img src={recipe.image} alt={recipe.title} className="aspect-[4/3] h-full w-full object-cover" />
       </div>
+      <CookbookFolderPickerModal
+        isOpen={isFolderPickerOpen}
+        onClose={() => setIsFolderPickerOpen(false)}
+        recipe={recipe}
+      />
     </section>
   )
 }

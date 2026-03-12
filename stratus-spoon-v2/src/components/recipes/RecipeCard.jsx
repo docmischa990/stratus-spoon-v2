@@ -1,10 +1,13 @@
+import { useState } from 'react'
 import { FavoriteToggleButton } from '@/components/cookbook/FavoriteToggleButton'
+import { CookbookFolderPickerModal } from '@/components/cookbook/CookbookFolderPickerModal'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/Button'
 import { useAuth } from '@/context/useAuth'
 import { useImportExternalRecipeMutation } from '@/hooks/useRecipes'
 
 export function RecipeCard({ recipe }) {
+  const [isFolderPickerOpen, setIsFolderPickerOpen] = useState(false)
   const { isAuthenticated } = useAuth()
   const importRecipe = useImportExternalRecipeMutation()
   const isLiveApiRecipe = recipe.sourceType === 'api' && String(recipe.id).startsWith('external:')
@@ -28,7 +31,7 @@ export function RecipeCard({ recipe }) {
           <h3 className="line-clamp-2 text-xl font-semibold">{recipe.title}</h3>
           <p className="line-clamp-3 text-sm leading-6 text-text-muted">{recipe.description}</p>
         </div>
-        <div className="flex items-center justify-between">
+        <div className="space-y-3">
           <div className="flex flex-wrap gap-2">
             {recipe.tags.map((tag) => (
               <span key={tag} className="rounded-full bg-surface-muted px-3 py-1 text-xs text-text-muted">
@@ -36,25 +39,33 @@ export function RecipeCard({ recipe }) {
               </span>
             ))}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap gap-2">
             <FavoriteToggleButton recipe={recipe} />
             {isLiveApiRecipe ? (
               <Button
                 type="button"
                 variant="secondary"
-                className="shrink-0"
+                className="min-w-0"
                 disabled={!isAuthenticated || importRecipe.isPending}
                 onClick={() => importRecipe.mutate(recipe)}
               >
-                {!isAuthenticated ? 'Log in to import' : importRecipe.isPending ? 'Saving…' : 'Save to cookbook'}
+                {!isAuthenticated ? 'Log in to import' : importRecipe.isPending ? 'Saving…' : 'Add to My Recipes'}
               </Button>
             ) : null}
-            <Button as={Link} to={`/recipes/${recipe.id}`} variant="ghost" className="shrink-0">
+            <Button type="button" variant="secondary" className="min-w-0" onClick={() => setIsFolderPickerOpen(true)}>
+              Add to Cookbook
+            </Button>
+            <Button as={Link} to={`/recipes/${recipe.id}`} variant="ghost" className="min-w-0">
               View
             </Button>
           </div>
         </div>
       </div>
+      <CookbookFolderPickerModal
+        isOpen={isFolderPickerOpen}
+        onClose={() => setIsFolderPickerOpen(false)}
+        recipe={recipe}
+      />
     </article>
   )
 }

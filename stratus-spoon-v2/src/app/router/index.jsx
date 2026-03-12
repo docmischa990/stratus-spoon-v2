@@ -19,6 +19,17 @@ const CreateRecipePage = lazy(() =>
 const CookbookPage = lazy(() =>
   import('@/pages/cookbook/CookbookPage').then((module) => ({ default: module.CookbookPage }))
 )
+const CookbookFolderPage = lazy(() =>
+  import('@/pages/cookbook/CookbookFolderPage').then((module) => ({
+    default: module.CookbookFolderPage,
+  }))
+)
+const FavoritesPage = lazy(() =>
+  import('@/pages/favorites/FavoritesPage').then((module) => ({ default: module.FavoritesPage }))
+)
+const MyRecipesPage = lazy(() =>
+  import('@/pages/my-recipes/MyRecipesPage').then((module) => ({ default: module.MyRecipesPage }))
+)
 const ProfilePage = lazy(() =>
   import('@/pages/profile/ProfilePage').then((module) => ({ default: module.ProfilePage }))
 )
@@ -75,6 +86,30 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             {withSuspense(<CookbookPage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'cookbook/:collectionId',
+        element: (
+          <ProtectedRoute>
+            {withSuspense(<CookbookFolderPage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'favorites',
+        element: (
+          <ProtectedRoute>
+            {withSuspense(<FavoritesPage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'my-recipes',
+        element: (
+          <ProtectedRoute>
+            {withSuspense(<MyRecipesPage />)}
           </ProtectedRoute>
         ),
       },

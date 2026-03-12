@@ -9,7 +9,8 @@ const navigation = [
   { to: '/recipes', label: 'Recipes' },
   { to: '/create', label: 'Create recipe' },
   { to: '/cookbook', label: 'Cookbook' },
-  { to: '/profile', label: 'Profile' },
+  { to: '/favorites', label: 'Favorites' },
+  { to: '/my-recipes', label: 'My Recipes' },
 ]
 
 export function MobileNavDrawer() {
@@ -62,8 +63,8 @@ export function MobileNavDrawer() {
                 <p className="text-sm font-semibold text-primary-dark">{user?.displayName || user?.email}</p>
                 <p className="text-xs text-text-muted">Signed in</p>
               </div>
-              <Button as={Link} to="/cookbook" variant="ghost" onClick={closeMobileNav}>
-                My cookbook
+              <Button as={Link} to="/profile" variant="ghost" onClick={closeMobileNav}>
+                Profile
               </Button>
               <Button
                 type="button"

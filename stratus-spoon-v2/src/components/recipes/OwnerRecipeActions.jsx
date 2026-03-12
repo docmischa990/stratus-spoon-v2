@@ -13,7 +13,7 @@ export function OwnerRecipeActions({ recipeId }) {
 
     try {
       await deleteRecipe.mutateAsync(recipeId)
-      navigate('/cookbook', { replace: true })
+      navigate('/my-recipes', { replace: true })
     } catch (error) {
       setErrorMessage(error.message || 'Unable to delete the recipe.')
     }
