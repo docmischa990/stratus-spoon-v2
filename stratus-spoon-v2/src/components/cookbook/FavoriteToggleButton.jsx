@@ -4,7 +4,7 @@ import { useFavoriteStatus, useToggleFavorite } from '@/hooks/useCookbook'
 
 export function FavoriteToggleButton({ recipe, variant = 'ghost', className = '' }) {
   const { isAuthenticated } = useAuth()
-  const { data: isFavorited = false } = useFavoriteStatus(recipe.id)
+  const { data: isFavorited = false } = useFavoriteStatus(recipe.id, { enabled: isAuthenticated })
   const toggleFavorite = useToggleFavorite(recipe)
 
   return (

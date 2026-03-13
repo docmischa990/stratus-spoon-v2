@@ -1,13 +1,17 @@
 import {
   createUserWithEmailAndPassword,
+  deleteUser,
+  EmailAuthProvider,
   GithubAuthProvider,
   GoogleAuthProvider,
   onAuthStateChanged,
+  reauthenticateWithCredential,
   RecaptchaVerifier,
   signInWithPhoneNumber,
   signInWithPopup,
   signInWithEmailAndPassword,
   signOut,
+  updatePassword,
   updateProfile,
 } from 'firebase/auth'
 import { createUserProfile } from '@/services/firebase/firestoreService'
@@ -205,4 +209,44 @@ export async function getAuthStatus() {
     isAuthenticated: Boolean(firebaseAuth?.currentUser),
     user: mapAuthUser(firebaseAuth?.currentUser ?? null),
   }
+}
+
+export async function syncAuthDisplayName(displayName) {
+  if (!firebaseAuth?.currentUser) {
+    throw getConfigError()
+  }
+
+  await updateProfile(firebaseAuth.currentUser, { displayName: displayName.trim() })
+  return mapAuthUser(firebaseAuth.currentUser)
+}
+
+export async function changeCurrentUserPassword({ currentPassword, nextPassword }) {
+  if (!firebaseAuth?.currentUser || !firebaseAuth.currentUser.email) {
+    throw getConfigError()
+  }
+
+  const credential = EmailAuthProvider.credential(
+    firebaseAuth.currentUser.email,
+    currentPassword.trim(),
+  )
+
+  await reauthenticateWithCredential(firebaseAuth.currentUser, credential)
+  await updatePassword(firebaseAuth.currentUser, nextPassword)
+}
+
+export async function deleteCurrentAuthUser({ currentPassword }) {
+  if (!firebaseAuth?.currentUser) {
+    throw getConfigError()
+  }
+
+  if (firebaseAuth.currentUser.email) {
+    const credential = EmailAuthProvider.credential(
+      firebaseAuth.currentUser.email,
+      currentPassword.trim(),
+    )
+
+    await reauthenticateWithCredential(firebaseAuth.currentUser, credential)
+  }
+
+  await deleteUser(firebaseAuth.currentUser)
 }

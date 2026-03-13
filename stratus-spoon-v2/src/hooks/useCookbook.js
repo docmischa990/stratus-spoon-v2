@@ -28,11 +28,13 @@ export function useCookbook() {
   })
 }
 
-export function useFavoriteStatus(recipeId) {
+export function useFavoriteStatus(recipeId, options = {}) {
+  const { enabled = true } = options
+
   return useQuery({
     queryKey: ['favorite-status', recipeId],
     queryFn: () => isRecipeFavorited(recipeId),
-    enabled: Boolean(recipeId),
+    enabled: Boolean(recipeId) && enabled,
   })
 }
 

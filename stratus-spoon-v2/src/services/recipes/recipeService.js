@@ -40,6 +40,16 @@ function normalizeList(value) {
   return value
 }
 
+function normalizeTags(tags) {
+  return Array.from(
+    new Set(
+      normalizeList(tags)
+        .map((tag) => (typeof tag === 'string' ? tag.trim() : ''))
+        .filter(Boolean),
+    ),
+  )
+}
+
 function normalizeIngredients(ingredients) {
   return normalizeList(ingredients).map((ingredient) => {
     if (typeof ingredient === 'string') {
@@ -70,7 +80,7 @@ function normalizeRecipe(docId, data) {
     description: data.description ?? '',
     image: data.image?.url ?? data.imageUrl ?? FALLBACK_IMAGE,
     category: data.category ?? 'Recipe',
-    tags: normalizeList(data.tags),
+    tags: normalizeTags(data.tags),
     sourceType: data.sourceType ?? 'internal',
     cookingTime: data.cookingTime ?? data.totalTime ?? 'Flexible',
     notes: data.notes ?? '',
@@ -124,7 +134,7 @@ function normalizeExternalRecipe(recipe) {
     description: recipe.description ?? '',
     image: recipe.image ?? FALLBACK_IMAGE,
     category: recipe.category ?? 'External',
-    tags: normalizeList(recipe.tags),
+    tags: normalizeTags(recipe.tags),
     sourceType: 'api',
     cookingTime: recipe.cookingTime ?? 'Flexible',
     notes: recipe.notes ?? '',
@@ -198,6 +208,7 @@ async function fetchExternalRecipeSearch(searchQuery, filters = {}, offset = 0) 
     totalResults,
     hasMore: nextOffset < totalResults,
     nextOffset,
+    quotaExceeded: Boolean(response.data?.quotaExceeded),
   }
 }
 
@@ -525,6 +536,7 @@ export async function listRecipes({ searchQuery = '', filters = {}, externalOffs
     totalResults: externalPayload.totalResults,
     hasMore: externalPayload.hasMore,
     nextOffset: externalPayload.nextOffset,
+    quotaExceeded: externalPayload.quotaExceeded ?? false,
   }
 }
 

@@ -14,6 +14,13 @@ function getApiKey() {
   return apiKey;
 }
 
+function createSpoonacularError(status, responseText) {
+  const error = new Error(`Spoonacular request failed with status ${status}: ${responseText}`);
+  error.status = status;
+  error.responseText = responseText;
+  return error;
+}
+
 function normalizeList(value) {
   return Array.isArray(value) ? value : [];
 }
@@ -81,7 +88,7 @@ async function spoonacularFetch(path, params = {}) {
 
   if (!response.ok) {
     const responseText = await response.text();
-    throw new Error(`Spoonacular request failed with status ${response.status}: ${responseText}`);
+    throw createSpoonacularError(response.status, responseText);
   }
 
   return response.json();

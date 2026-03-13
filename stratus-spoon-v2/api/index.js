@@ -10,16 +10,36 @@ exports.searchRecipes = onCall({secrets: ["SPOONACULAR_API_KEY"]}, async (reques
   const query = request.data?.query ?? "";
   const filters = request.data?.filters ?? {};
   const offset = Number(request.data?.offset ?? 0) || 0;
-  const payload = await searchSpoonacularRecipes(query, filters, offset);
 
-  return {
-    ok: true,
-    query,
-    filters,
-    offset,
-    results: payload.results,
-    totalResults: payload.totalResults,
-  };
+  try {
+    const payload = await searchSpoonacularRecipes(query, filters, offset);
+
+    return {
+      ok: true,
+      query,
+      filters,
+      offset,
+      results: payload.results,
+      totalResults: payload.totalResults,
+      quotaExceeded: false,
+    };
+  } catch (error) {
+    if (error?.status === 402) {
+      console.warn("Spoonacular daily limit reached.", error.responseText || error.message);
+
+      return {
+        ok: true,
+        query,
+        filters,
+        offset,
+        results: [],
+        totalResults: 0,
+        quotaExceeded: true,
+      };
+    }
+
+    throw error;
+  }
 });
 
 exports.getExternalRecipe = onCall({secrets: ["SPOONACULAR_API_KEY"]}, async (request) => {

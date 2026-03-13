@@ -23,21 +23,33 @@ export async function createUserProfile(user, profileOverrides = {}) {
 
   const userRef = doc(firestoreDb, 'users', user.uid)
   const userSnapshot = await getDoc(userRef)
+  const existingData = userSnapshot.exists() ? userSnapshot.data() : null
 
   const profileData = {
     uid: user.uid,
-    email: user.email ?? '',
-    displayName: profileOverrides.displayName ?? user.displayName ?? '',
-    photoURL: profileOverrides.photoURL ?? user.photoURL ?? null,
-    bio: profileOverrides.bio ?? '',
-    recipeCount: profileOverrides.recipeCount ?? 0,
-    favoriteRecipeCount: profileOverrides.favoriteRecipeCount ?? 0,
-    collectionCount: profileOverrides.collectionCount ?? 0,
-    preferences: profileOverrides.preferences ?? {
+    email: user.email ?? existingData?.email ?? '',
+    displayName: profileOverrides.displayName ?? user.displayName ?? existingData?.displayName ?? '',
+    photoURL: profileOverrides.photoURL ?? user.photoURL ?? existingData?.photoURL ?? null,
+    bio: profileOverrides.bio ?? existingData?.bio ?? '',
+    recipeCount: profileOverrides.recipeCount ?? existingData?.recipeCount ?? 0,
+    favoriteRecipeCount: profileOverrides.favoriteRecipeCount ?? existingData?.favoriteRecipeCount ?? 0,
+    collectionCount: profileOverrides.collectionCount ?? existingData?.collectionCount ?? 0,
+    preferences: profileOverrides.preferences ?? existingData?.preferences ?? {
       dietaryTags: [],
       theme: null,
     },
     updatedAt: serverTimestamp(),
+  }
+
+  const shouldWriteProfile =
+    !existingData ||
+    existingData.email !== profileData.email ||
+    existingData.displayName !== profileData.displayName ||
+    existingData.photoURL !== profileData.photoURL ||
+    existingData.bio !== profileData.bio
+
+  if (!shouldWriteProfile) {
+    return existingData
   }
 
   await setDoc(

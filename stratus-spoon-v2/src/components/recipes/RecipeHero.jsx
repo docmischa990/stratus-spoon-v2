@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { CookbookFolderPickerModal } from '@/components/cookbook/CookbookFolderPickerModal'
 import { Button } from '@/components/ui/Button'
+import { AppImage } from '@/components/ui/AppImage'
 import { FavoriteToggleButton } from '@/components/cookbook/FavoriteToggleButton'
 import { useAuth } from '@/context/useAuth'
 import { useImportExternalRecipeMutation } from '@/hooks/useRecipes'
@@ -45,7 +46,11 @@ export function RecipeHero({ recipe }) {
         </div>
       </div>
       <div className="overflow-hidden rounded-3xl border border-border shadow-card">
-        <img src={recipe.image} alt={recipe.title} className="aspect-[4/3] h-full w-full object-cover" />
+        <AppImage
+          src={recipe.image}
+          alt={recipe.title}
+          className="aspect-[4/3] h-full w-full object-cover"
+        />
       </div>
       <CookbookFolderPickerModal
         isOpen={isFolderPickerOpen}

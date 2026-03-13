@@ -6,7 +6,8 @@ import { SectionHeading } from '@/components/ui/SectionHeading'
 import { useRecipes } from '@/hooks/useRecipes'
 
 export function HomePage() {
-  const { data: recipes = [] } = useRecipes()
+  const { data, isLoading, isError } = useRecipes()
+  const featuredRecipes = data?.pages?.flatMap((page) => page.recipes ?? []).slice(0, 3) ?? []
 
   return (
     <>
@@ -51,7 +52,19 @@ export function HomePage() {
             title="A first look at the browse experience"
             description="Cards, imagery, and spacing are styled around the approved warm design system so future data can drop into stable UI primitives."
           />
-          <RecipeGrid recipes={recipes.slice(0, 3)} />
+          {isLoading ? (
+            <div className="card-base p-6">
+              <p className="text-sm text-text-muted">Loading featured recipes…</p>
+            </div>
+          ) : isError ? (
+            <div className="card-base p-6">
+              <p className="text-sm text-text-muted">
+                Featured recipes are unavailable right now. Open the recipes page to retry the full browse flow.
+              </p>
+            </div>
+          ) : (
+            <RecipeGrid recipes={featuredRecipes} />
+          )}
         </div>
       </PageSection>
     </>

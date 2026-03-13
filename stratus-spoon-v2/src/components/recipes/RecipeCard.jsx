@@ -3,6 +3,7 @@ import { FavoriteToggleButton } from '@/components/cookbook/FavoriteToggleButton
 import { CookbookFolderPickerModal } from '@/components/cookbook/CookbookFolderPickerModal'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/Button'
+import { AppImage } from '@/components/ui/AppImage'
 import { useAuth } from '@/context/useAuth'
 import { useImportExternalRecipeMutation } from '@/hooks/useRecipes'
 
@@ -15,7 +16,7 @@ export function RecipeCard({ recipe }) {
   return (
     <article className="card-base group overflow-hidden">
       <div className="aspect-[4/3] overflow-hidden">
-        <img
+        <AppImage
           src={recipe.image}
           alt={recipe.title}
           className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
