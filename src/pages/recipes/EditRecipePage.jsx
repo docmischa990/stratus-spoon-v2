@@ -62,6 +62,7 @@ function EditRecipeForm({ recipe }) {
   const updateRecipe = useUpdateRecipeMutation()
   const [formValues, setFormValues] = useState(() => getRecipeFormDefaults(recipe))
   const [imageFile, setImageFile] = useState(null)
+  const [generatedImage, setGeneratedImage] = useState(null)
   const [imagePreviewUrl, setImagePreviewUrl] = useState(recipe.image || '')
   const [errorMessage, setErrorMessage] = useState('')
 
@@ -74,6 +75,7 @@ function EditRecipeForm({ recipe }) {
 
   function handleSelectImage(nextFile) {
     setImageFile(nextFile)
+    setGeneratedImage(null)
 
     if (!nextFile) {
       setImagePreviewUrl(recipe.image || '')
@@ -81,6 +83,12 @@ function EditRecipeForm({ recipe }) {
     }
 
     setImagePreviewUrl(URL.createObjectURL(nextFile))
+  }
+
+  function handleUseGeneratedImage(nextGeneratedImage) {
+    setGeneratedImage(nextGeneratedImage)
+    setImageFile(null)
+    setImagePreviewUrl(nextGeneratedImage?.url ?? recipe.image ?? '')
   }
 
   async function handleSubmit(event) {
@@ -92,6 +100,7 @@ function EditRecipeForm({ recipe }) {
         recipeId: recipe.id,
         formValues,
         imageFile,
+        generatedImage,
       })
       navigate(`/recipes/${recipe.id}`)
     } catch (error) {
@@ -116,7 +125,14 @@ function EditRecipeForm({ recipe }) {
           imagePreviewUrl={imagePreviewUrl}
           onSelectImage={handleSelectImage}
         />
-        <AIImageGeneratorCard presets={presets} />
+        <AIImageGeneratorCard
+          presets={presets}
+          title={formValues.title}
+          description={formValues.description}
+          recipeId={recipe.id}
+          generatedImage={generatedImage}
+          onUseGeneratedImage={handleUseGeneratedImage}
+        />
       </div>
     </div>
   )

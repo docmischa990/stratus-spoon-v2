@@ -369,7 +369,7 @@ export function getRecipeFormDefaults(recipe) {
   }
 }
 
-export async function createRecipe({ formValues, imageFile }) {
+export async function createRecipe({ formValues, imageFile, generatedImage }) {
   if (!firebaseAuth?.currentUser || !firestoreDb) {
     throw new Error('You must be logged in with Firebase configured to create a recipe.')
   }
@@ -397,6 +397,11 @@ export async function createRecipe({ formValues, imageFile }) {
         updatedAt: serverTimestamp(),
       })
     }
+  } else if (generatedImage) {
+    await updateDoc(recipeRef, {
+      image: generatedImage,
+      updatedAt: serverTimestamp(),
+    })
   }
 
   await adjustProfileCounters(ownerId, { recipeCount: 1 })
@@ -451,7 +456,7 @@ async function uploadRecipeImage({ ownerId, recipeId, imageFile }) {
   return uploadedImage
 }
 
-export async function updateRecipe({ recipeId, formValues, imageFile }) {
+export async function updateRecipe({ recipeId, formValues, imageFile, generatedImage }) {
   if (!firebaseAuth?.currentUser || !firestoreDb) {
     throw new Error('You must be logged in with Firebase configured to edit a recipe.')
   }
@@ -476,6 +481,8 @@ export async function updateRecipe({ recipeId, formValues, imageFile }) {
           recipeId,
           imageFile,
         })
+      : generatedImage
+        ? generatedImage
       : snapshot.data().image ?? null
 
   await updateDoc(recipeRef, {

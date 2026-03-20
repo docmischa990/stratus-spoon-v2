@@ -15,6 +15,7 @@ export function CreateRecipePage() {
   const navigate = useNavigate()
   const [formValues, setFormValues] = useState(getRecipeFormDefaults())
   const [imageFile, setImageFile] = useState(null)
+  const [generatedImage, setGeneratedImage] = useState(null)
   const [imagePreviewUrl, setImagePreviewUrl] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
 
@@ -27,6 +28,7 @@ export function CreateRecipePage() {
 
   function handleSelectImage(nextFile) {
     setImageFile(nextFile)
+    setGeneratedImage(null)
 
     if (!nextFile) {
       setImagePreviewUrl('')
@@ -34,6 +36,12 @@ export function CreateRecipePage() {
     }
 
     setImagePreviewUrl(URL.createObjectURL(nextFile))
+  }
+
+  function handleUseGeneratedImage(nextGeneratedImage) {
+    setGeneratedImage(nextGeneratedImage)
+    setImageFile(null)
+    setImagePreviewUrl(nextGeneratedImage?.url ?? '')
   }
 
   function validateForm() {
@@ -72,10 +80,12 @@ export function CreateRecipePage() {
       const recipeId = await createRecipe.mutateAsync({
         formValues,
         imageFile,
+        generatedImage,
       })
 
       setFormValues(getRecipeFormDefaults())
       setImageFile(null)
+      setGeneratedImage(null)
       setImagePreviewUrl('')
       navigate(`/recipes/${recipeId}`)
     } catch (error) {
@@ -105,7 +115,13 @@ export function CreateRecipePage() {
               imagePreviewUrl={imagePreviewUrl}
               onSelectImage={handleSelectImage}
             />
-            <AIImageGeneratorCard presets={presets} />
+            <AIImageGeneratorCard
+              presets={presets}
+              title={formValues.title}
+              description={formValues.description}
+              generatedImage={generatedImage}
+              onUseGeneratedImage={handleUseGeneratedImage}
+            />
           </div>
         </div>
       </div>

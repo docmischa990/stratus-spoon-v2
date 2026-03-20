@@ -1,9 +1,10 @@
-const {onCall} = require("firebase-functions/v2/https");
+const {HttpsError, onCall} = require("firebase-functions/v2/https");
 const {importRecipes} = require("./src/recipes/importRecipes");
 const {
   fetchSpoonacularRecipeById,
   searchSpoonacularRecipes,
 } = require("./src/recipes/spoonacular");
+const {generateAndStoreRecipeImage} = require("./src/images/generateRecipeImage");
 
 exports.importRecipes = importRecipes;
 exports.searchRecipes = onCall({secrets: ["SPOONACULAR_API_KEY"]}, async (request) => {
@@ -50,5 +51,30 @@ exports.getExternalRecipe = onCall({secrets: ["SPOONACULAR_API_KEY"]}, async (re
     ok: true,
     recipeId,
     recipe,
+  };
+});
+
+exports.generateRecipeImage = onCall(async (request) => {
+  const title = request.data?.title ?? "";
+  const description = request.data?.description ?? "";
+  const recipeId = request.data?.recipeId ?? "draft";
+  const userId = request.auth?.uid;
+
+  if (!userId) {
+    throw new HttpsError("unauthenticated", "You must be signed in to generate recipe images.");
+  }
+
+  const payload = await generateAndStoreRecipeImage({
+    userId,
+    recipeId,
+    title,
+    description,
+  });
+
+  return {
+    ok: true,
+    image: payload.image,
+    prompt: payload.prompt,
+    remaining: payload.remaining,
   };
 });
