@@ -547,6 +547,19 @@ export async function listRecipes({ searchQuery = '', filters = {}, externalOffs
   }
 }
 
+export async function listInternalRecipes({ searchQuery = '' } = {}) {
+  if (isFirebaseConfigured && firestoreDb) {
+    try {
+      return await listRecipesFromFirestore(searchQuery)
+    } catch (error) {
+      throw createRecipeLoadError(error)
+    }
+  }
+
+  await wait()
+  return filterRecipesByQuery(getMockInternalRecipes(), searchQuery)
+}
+
 export async function getRecipeById(recipeId) {
   if (String(recipeId).startsWith('external:')) {
     return fetchExternalRecipeById(recipeId)

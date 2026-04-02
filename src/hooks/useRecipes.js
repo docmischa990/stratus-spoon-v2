@@ -44,6 +44,7 @@ export function useCreateRecipeMutation() {
         queryClient.invalidateQueries({ queryKey: ['recipes'] }),
         queryClient.invalidateQueries({ queryKey: ['cookbook'] }),
         queryClient.invalidateQueries({ queryKey: ['profile'] }),
+        queryClient.invalidateQueries({ queryKey: ['recommendations'] }),
       ])
 
       return recipeId
@@ -155,6 +156,7 @@ export function useUpdateRecipeMutation() {
       queryClient.invalidateQueries({ queryKey: ['recipes'] })
       queryClient.invalidateQueries({ queryKey: ['recipes', variables.recipeId] })
       queryClient.invalidateQueries({ queryKey: ['cookbook'] })
+      queryClient.invalidateQueries({ queryKey: ['recommendations'] })
     },
   })
 }
@@ -217,6 +219,7 @@ export function useDeleteRecipeMutation() {
       queryClient.invalidateQueries({ queryKey: ['recipes'] })
       queryClient.invalidateQueries({ queryKey: ['cookbook'] })
       queryClient.invalidateQueries({ queryKey: ['profile'] })
+      queryClient.invalidateQueries({ queryKey: ['recommendations'] })
       queryClient.removeQueries({ queryKey: ['recipes', recipeId] })
     },
   })
@@ -232,6 +235,7 @@ export function useImportExternalRecipeMutation() {
         queryClient.invalidateQueries({ queryKey: ['recipes'] }),
         queryClient.invalidateQueries({ queryKey: ['cookbook'] }),
         queryClient.invalidateQueries({ queryKey: ['profile'] }),
+        queryClient.invalidateQueries({ queryKey: ['recommendations'] }),
       ])
 
       return recipeId

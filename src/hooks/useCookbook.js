@@ -106,6 +106,7 @@ export function useToggleFavorite(recipe) {
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['cookbook'] })
       queryClient.invalidateQueries({ queryKey: ['profile'] })
+      queryClient.invalidateQueries({ queryKey: ['recommendations'] })
     },
   })
 }
@@ -168,6 +169,7 @@ export function useCreateCollection() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cookbook'] })
       queryClient.invalidateQueries({ queryKey: ['profile'] })
+      queryClient.invalidateQueries({ queryKey: ['recommendations'] })
     },
   })
 }
@@ -220,6 +222,7 @@ export function useDeleteCollection() {
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['cookbook'] })
       queryClient.invalidateQueries({ queryKey: ['profile'] })
+      queryClient.invalidateQueries({ queryKey: ['recommendations'] })
     },
   })
 }
@@ -258,6 +261,7 @@ export function useUpdateCollection() {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['cookbook'] })
+      queryClient.invalidateQueries({ queryKey: ['recommendations'] })
     },
   })
 }
@@ -324,6 +328,7 @@ export function useToggleCollectionRecipe(recipe) {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['cookbook'] })
+      queryClient.invalidateQueries({ queryKey: ['recommendations'] })
     },
   })
 }

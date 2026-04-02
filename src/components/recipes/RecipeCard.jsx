@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion'
 import { useState } from 'react'
 import { FavoriteToggleButton } from '@/components/cookbook/FavoriteToggleButton'
 import { CookbookFolderPickerModal } from '@/components/cookbook/CookbookFolderPickerModal'
@@ -6,6 +7,9 @@ import { Button } from '@/components/ui/Button'
 import { AppImage } from '@/components/ui/AppImage'
 import { useAuth } from '@/context/useAuth'
 import { useImportExternalRecipeMutation } from '@/hooks/useRecipes'
+import { fadeUpVariant, pageTransition } from '@/utils/motion'
+
+const MotionArticle = motion.article
 
 export function RecipeCard({ recipe }) {
   const [isFolderPickerOpen, setIsFolderPickerOpen] = useState(false)
@@ -14,7 +18,12 @@ export function RecipeCard({ recipe }) {
   const isLiveApiRecipe = recipe.sourceType === 'api' && String(recipe.id).startsWith('external:')
 
   return (
-    <article className="card-base group overflow-hidden">
+    <MotionArticle
+      className="card-base group overflow-hidden"
+      variants={fadeUpVariant}
+      transition={pageTransition}
+      whileHover={{ y: -6 }}
+    >
       <div className="aspect-[4/3] overflow-hidden">
         <AppImage
           src={recipe.image}
@@ -67,6 +76,6 @@ export function RecipeCard({ recipe }) {
         onClose={() => setIsFolderPickerOpen(false)}
         recipe={recipe}
       />
-    </article>
+    </MotionArticle>
   )
 }

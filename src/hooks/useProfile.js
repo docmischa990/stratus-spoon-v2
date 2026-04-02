@@ -31,6 +31,7 @@ export function useUpdateProfileMutation() {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] })
+      queryClient.invalidateQueries({ queryKey: ['recommendations'] })
     },
   })
 }
@@ -45,6 +46,7 @@ export function useUpdatePreferencesMutation() {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] })
+      queryClient.invalidateQueries({ queryKey: ['recommendations'] })
     },
   })
 }

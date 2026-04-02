@@ -1,6 +1,10 @@
+import { motion } from 'framer-motion'
 import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { useCreateCollection, useUpdateCollection } from '@/hooks/useCookbook'
+import { fadeUpVariant, pageTransition } from '@/utils/motion'
+
+const MotionSection = motion.section
 
 export function CollectionFormCard({ collection = null, submitLabel, title, onSuccess }) {
   const createCollection = useCreateCollection()
@@ -40,7 +44,14 @@ export function CollectionFormCard({ collection = null, submitLabel, title, onSu
   }
 
   return (
-    <section className="card-base p-5">
+    <MotionSection
+      className="card-base p-5"
+      variants={fadeUpVariant}
+      initial="initial"
+      whileInView="animate"
+      viewport={{ once: true, amount: 0.2 }}
+      transition={pageTransition}
+    >
       <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
         {title || (isEditing ? 'Edit folder' : 'New folder')}
       </p>
@@ -76,6 +87,6 @@ export function CollectionFormCard({ collection = null, submitLabel, title, onSu
             : submitLabel || (isEditing ? 'Save changes' : 'Create folder')}
         </Button>
       </form>
-    </section>
+    </MotionSection>
   )
 }

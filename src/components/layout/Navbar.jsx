@@ -1,8 +1,13 @@
+import { motion } from 'framer-motion'
 import { Link, NavLink } from 'react-router-dom'
 import { Button } from '@/components/ui/Button'
 import { useAuth } from '@/context/useAuth'
 import { useUIStore } from '@/store/uiStore'
 import { cn } from '@/utils/cn'
+import { pageTransition } from '@/utils/motion'
+
+const MotionHeader = motion.header
+const MotionNavLink = motion(NavLink)
 
 const navigation = [
   { to: '/', label: 'Home' },
@@ -18,7 +23,12 @@ export function Navbar() {
   const { isAuthenticated, isLoading, logoutUser, user } = useAuth()
 
   return (
-    <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur">
+    <MotionHeader
+      className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur"
+      initial={{ opacity: 0, y: -16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={pageTransition}
+    >
       <div className="container flex h-16 items-center justify-between gap-6 md:h-[72px]">
         <Link to="/" className="flex items-center gap-3">
           <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary text-sm font-bold text-background">
@@ -74,14 +84,16 @@ export function Navbar() {
           Menu
         </Button>
       </div>
-    </header>
+    </MotionHeader>
   )
 }
 
 function NavItem({ to, label }) {
   return (
-    <NavLink
+    <MotionNavLink
       to={to}
+      whileHover={{ y: -1 }}
+      whileTap={{ scale: 0.98 }}
       className={({ isActive }) =>
         cn(
           'rounded-xl px-3 py-2 text-sm font-medium text-text-muted hover:bg-primary-dark/5 hover:text-primary-dark',
@@ -90,6 +102,6 @@ function NavItem({ to, label }) {
       }
     >
       {label}
-    </NavLink>
+    </MotionNavLink>
   )
 }

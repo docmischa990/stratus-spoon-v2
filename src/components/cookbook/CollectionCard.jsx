@@ -1,6 +1,10 @@
+import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/Button'
 import { useDeleteCollection, useToggleCollectionRecipe } from '@/hooks/useCookbook'
+import { fadeUpVariant, pageTransition } from '@/utils/motion'
+
+const MotionArticle = motion.article
 
 export function CollectionCard({ collection, viewMode = 'grid' }) {
   const deleteCollection = useDeleteCollection()
@@ -8,7 +12,12 @@ export function CollectionCard({ collection, viewMode = 'grid' }) {
   const isList = viewMode === 'list'
 
   return (
-    <article className={`card-base p-5 ${isList ? 'flex flex-col gap-5 md:flex-row md:items-start md:justify-between' : ''}`}>
+    <MotionArticle
+      className={`card-base p-5 ${isList ? 'flex flex-col gap-5 md:flex-row md:items-start md:justify-between' : ''}`}
+      variants={fadeUpVariant}
+      transition={pageTransition}
+      whileHover={{ y: -4 }}
+    >
       <div className={`flex items-start justify-between gap-4 ${isList ? 'md:min-w-[320px]' : ''}`}>
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Cookbook folder</p>
@@ -73,6 +82,6 @@ export function CollectionCard({ collection, viewMode = 'grid' }) {
           <p className="text-sm text-text-muted">No recipes in this folder yet.</p>
         </div>
       )}
-    </article>
+    </MotionArticle>
   )
 }

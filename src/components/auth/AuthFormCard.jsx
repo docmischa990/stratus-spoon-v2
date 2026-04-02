@@ -1,8 +1,13 @@
+import { AnimatePresence, motion } from 'framer-motion'
 import { useId, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/Button'
 import { useAuth } from '@/context/useAuth'
 import { getReadableAuthError } from '@/services/firebase/authErrors'
+import { fadeUpVariant, pageTransition } from '@/utils/motion'
+
+const MotionSection = motion.section
+const MotionParagraph = motion.p
 
 export function AuthFormCard({ mode = 'login' }) {
   const isLogin = mode === 'login'
@@ -124,7 +129,13 @@ export function AuthFormCard({ mode = 'login' }) {
   }
 
   return (
-    <section className="card-base w-full max-w-lg p-6 md:p-8">
+    <MotionSection
+      className="card-base w-full max-w-lg p-6 md:p-8"
+      variants={fadeUpVariant}
+      initial="initial"
+      animate="animate"
+      transition={pageTransition}
+    >
       <div className="space-y-3">
         <p className="text-xs font-semibold uppercase tracking-[0.28em] text-primary">
           {isLogin ? 'Welcome back' : 'Create account'}
@@ -171,7 +182,20 @@ export function AuthFormCard({ mode = 'login' }) {
             />
           </label>
         ) : null}
-        {errorMessage ? <p className="text-sm font-medium text-danger">{errorMessage}</p> : null}
+        <AnimatePresence mode="wait">
+          {errorMessage ? (
+            <MotionParagraph
+              key={errorMessage}
+              className="text-sm font-medium text-danger"
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.2 }}
+            >
+              {errorMessage}
+            </MotionParagraph>
+          ) : null}
+        </AnimatePresence>
         <Button className="w-full" disabled={isSubmitting || !isConfigured}>
           {isSubmitting ? 'Submitting…' : isLogin ? 'Log in' : 'Create account'}
         </Button>
@@ -274,6 +298,6 @@ export function AuthFormCard({ mode = 'login' }) {
           {isLogin ? 'Sign up' : 'Log in'}
         </Link>
       </p>
-    </section>
+    </MotionSection>
   )
 }

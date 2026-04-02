@@ -1,13 +1,12 @@
 import { Link } from 'react-router-dom'
-import { RecipeGrid } from '@/components/recipes/RecipeGrid'
+import { RecommendationSection } from '@/components/home/RecommendationSection'
 import { Button } from '@/components/ui/Button'
 import { PageSection } from '@/components/ui/PageSection'
 import { SectionHeading } from '@/components/ui/SectionHeading'
-import { useRecipes } from '@/hooks/useRecipes'
+import { useRecommendations } from '@/hooks/useRecommendations'
 
 export function HomePage() {
-  const { data, isLoading, isError } = useRecipes()
-  const featuredRecipes = data?.pages?.flatMap((page) => page.recipes ?? []).slice(0, 3) ?? []
+  const { recommended, trending, quickMeals, healthy, isLoading, isError, error } = useRecommendations()
 
   return (
     <>
@@ -48,23 +47,46 @@ export function HomePage() {
       <PageSection className="pt-0">
         <div className="container space-y-8">
           <SectionHeading
-            eyebrow="Featured recipes"
-            title="A first look at the browse experience"
-            description="Cards, imagery, and spacing are styled around the approved warm design system so future data can drop into stable UI primitives."
+            eyebrow="Personalized discovery"
+            title="Recommendation rails tuned to the recipes you save and browse"
+            description="Phase 1 keeps recommendations inside the existing Firestore recipe catalog so the home page can surface useful categories without adding backend complexity."
           />
-          {isLoading ? (
-            <div className="card-base p-6">
-              <p className="text-sm text-text-muted">Loading featured recipes…</p>
-            </div>
-          ) : isError ? (
-            <div className="card-base p-6">
-              <p className="text-sm text-text-muted">
-                Featured recipes are unavailable right now. Open the recipes page to retry the full browse flow.
-              </p>
-            </div>
-          ) : (
-            <RecipeGrid recipes={featuredRecipes} />
-          )}
+          <RecommendationSection
+            title="Recommended For You"
+            description="Personalized from your saved recipe tags and categories, with recent recipes as the fallback."
+            recipes={recommended}
+            emptyMessage="Save a few favorites or add more public recipes to unlock personalized suggestions."
+            isLoading={isLoading}
+            isError={isError}
+            errorMessage={error?.message}
+          />
+          <RecommendationSection
+            title="Trending Recipes"
+            description="Fresh additions from the current recipe catalog."
+            recipes={trending}
+            emptyMessage="Trending recipes will appear here as new public recipes are added."
+            isLoading={isLoading}
+            isError={isError}
+            errorMessage={error?.message}
+          />
+          <RecommendationSection
+            title="Quick Meals"
+            description="Fast recipes tagged for quick cooking or short prep windows."
+            recipes={quickMeals}
+            emptyMessage="No quick meals match the current recipe catalog yet."
+            isLoading={isLoading}
+            isError={isError}
+            errorMessage={error?.message}
+          />
+          <RecommendationSection
+            title="Healthy Recipes"
+            description="Balanced recipes prioritized around healthy and dietary-friendly tags."
+            recipes={healthy}
+            emptyMessage="Healthy recipes will appear here once the catalog includes more matching tags."
+            isLoading={isLoading}
+            isError={isError}
+            errorMessage={error?.message}
+          />
         </div>
       </PageSection>
     </>
