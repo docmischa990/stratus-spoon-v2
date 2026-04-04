@@ -23,14 +23,6 @@ export function RecipesPage() {
   const externalError = pages.find((page) => page.externalError)?.externalError ?? null
   const isApiOnlyView = filters.source === 'api'
   const shouldShowLoadMore = filters.source !== 'internal' && hasNextPage
-  const pageDiagnostics = pages.map((page, index) => ({
-    index: index + 1,
-    recipeCount: page.recipes?.length ?? 0,
-    nextOffset: page.nextOffset ?? null,
-    hasMore: Boolean(page.hasMore),
-    externalError: page.externalError ?? null,
-  }))
-
   const filteredRecipes = recipes.filter((recipe) => {
     const recipeCategory = normalizeValue(recipe.category)
     const recipeTags = Array.isArray(recipe.tags) ? recipe.tags.map(normalizeValue) : []
@@ -56,33 +48,6 @@ export function RecipesPage() {
           <div className="space-y-5">
             <SearchBar />
             <FilterPanel />
-            <div className="card-base p-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-                Pagination Diagnostics
-              </p>
-              <div className="mt-3 space-y-2 text-sm text-text-muted">
-                <p>Pages loaded: {pages.length}</p>
-                <p>Total recipes loaded: {recipes.length}</p>
-                <p>Recipes after filter: {filteredRecipes.length}</p>
-                <p>Source filter: {filters.source}</p>
-                <p>Has next page: {String(Boolean(hasNextPage))}</p>
-                <p>Fetching next page: {String(Boolean(isFetchingNextPage))}</p>
-                <p>External error: {externalError || 'none'}</p>
-              </div>
-              {pageDiagnostics.length > 0 ? (
-                <div className="mt-4 space-y-2 text-xs text-text-muted">
-                  {pageDiagnostics.map((page) => (
-                    <div key={page.index} className="rounded-xl bg-surface-muted/60 px-3 py-2">
-                      <p>Page {page.index}</p>
-                      <p>Recipes: {page.recipeCount}</p>
-                      <p>Has more: {String(page.hasMore)}</p>
-                      <p>Next offset: {page.nextOffset ?? 'null'}</p>
-                      <p>Error: {page.externalError || 'none'}</p>
-                    </div>
-                  ))}
-                </div>
-              ) : null}
-            </div>
           </div>
           {isLoading ? (
             <div className="card-base p-6">
