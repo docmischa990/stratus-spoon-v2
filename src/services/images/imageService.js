@@ -9,7 +9,7 @@ export async function getImageGenerationPresets() {
 const IMAGE_GENERATION_TIMEOUT_MS = 180000
 
 function getImageServiceEndpoint() {
-  const baseUrl = import.meta.env.VITE_IMAGE_SERVICE_URL?.trim()
+  const baseUrl = process.env.NEXT_PUBLIC_IMAGE_SERVICE_URL?.trim()
 
   if (!baseUrl) {
     throw new Error('AI image generation is not configured for this environment.')
