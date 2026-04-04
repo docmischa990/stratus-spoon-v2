@@ -1,4 +1,5 @@
 import { onCall } from 'firebase-functions/v2/https'
+import { searchRecipes as searchRecipesHttp } from './searchRecipes.js'
 import { fetchSpoonacularRecipeById, searchSpoonacularRecipes } from './recipes/spoonacular.js'
 
 export const searchRecipes = onCall(async (request) => {
@@ -30,3 +31,5 @@ export const generateRecipeImage = onCall(async (request) => {
     imageUrl: null,
   }
 })
+
+export { searchRecipesHttp }
