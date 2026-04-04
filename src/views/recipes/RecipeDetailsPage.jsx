@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom'
+import { useParams } from '@/lib/router'
 import { OwnerRecipeActions } from '@/components/recipes/OwnerRecipeActions'
 import { IngredientList } from '@/components/recipes/IngredientList'
 import { NotesSection } from '@/components/recipes/NotesSection'

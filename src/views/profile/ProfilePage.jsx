@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from '@/lib/router'
 import { ProfileSummary } from '@/components/profile/ProfileSummary'
 import { Button } from '@/components/ui/Button'
 import { PageSection } from '@/components/ui/PageSection'

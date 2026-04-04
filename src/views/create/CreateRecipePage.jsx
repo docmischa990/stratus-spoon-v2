@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from '@/lib/router'
 import { AIImageGeneratorCard } from '@/components/editor/AIImageGeneratorCard'
 import { ImageUploadCard } from '@/components/editor/ImageUploadCard'
 import { RecipeEditorPanel } from '@/components/editor/RecipeEditorPanel'

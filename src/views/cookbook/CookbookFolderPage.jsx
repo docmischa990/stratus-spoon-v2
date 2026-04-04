@@ -1,4 +1,4 @@
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams } from '@/lib/router'
 import { CollectionFormCard } from '@/components/cookbook/CollectionFormCard'
 import { RecipeGrid } from '@/components/recipes/RecipeGrid'
 import { Button } from '@/components/ui/Button'
