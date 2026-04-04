@@ -12,19 +12,14 @@ import {
   updateDoc,
   where,
 } from 'firebase/firestore'
-import { httpsCallable } from 'firebase/functions'
 import { mockRecipes } from '@/data/mockRecipes'
-import {
-  firebaseAuth,
-  firestoreDb,
-  firebaseFunctions,
-  isFirebaseConfigured,
-} from '@/lib/firebase/firebase'
+import { firebaseAuth, firestoreDb, isFirebaseConfigured } from '@/lib/firebase/firebase'
 import { uploadRecipeImage as uploadRecipeImageToStorage } from '@/services/firebase/storageService'
 import { adjustProfileCounters } from '@/services/profiles/profileCounters'
 
 const FALLBACK_IMAGE =
   'https://images.unsplash.com/photo-1495521821757-a1efb6729352?auto=format&fit=crop&w=1200&q=80'
+const FUNCTIONS_REGION = 'us-central1'
 
 function wait(ms = 180) {
   return new Promise((resolve) => {
@@ -127,6 +122,66 @@ function createRecipeLoadError(error) {
   return new Error(error?.message || 'Unable to load recipes from Firestore.')
 }
 
+function createExternalRecipeLoadError(error) {
+  if (error?.code === 'functions/resource-exhausted') {
+    return new Error('The live recipe API quota is exhausted right now. Try again later.')
+  }
+
+  if (error?.code === 'functions/unavailable') {
+    return new Error('The live recipe API is temporarily unavailable.')
+  }
+
+  if (error?.code === 'functions/internal') {
+    return new Error('The live recipe API returned an internal error.')
+  }
+
+  return new Error(error?.message || 'Unable to load live API recipes right now.')
+}
+
+function getRecipeFunctionUrl(functionName) {
+  const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID?.trim()
+
+  if (!projectId) {
+    throw new Error('Firebase project ID is not configured for live recipe API requests.')
+  }
+
+  return `https://${FUNCTIONS_REGION}-${projectId}.cloudfunctions.net/${functionName}`
+}
+
+async function callRecipeFunction(functionName, payload) {
+  const headers = {
+    'Content-Type': 'application/json',
+  }
+
+  const idToken = await firebaseAuth?.currentUser?.getIdToken?.().catch(() => null)
+
+  if (idToken) {
+    headers.Authorization = `Bearer ${idToken}`
+  }
+
+  const response = await fetch(getRecipeFunctionUrl(functionName), {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      data: payload,
+    }),
+  })
+
+  const responsePayload = await response.json().catch(() => null)
+
+  if (!response.ok) {
+    const message =
+      responsePayload?.error?.message ||
+      responsePayload?.message ||
+      `Recipe function ${functionName} failed with status ${response.status}.`
+    const error = new Error(message)
+    error.status = response.status
+    throw error
+  }
+
+  return responsePayload?.result ?? responsePayload?.data ?? responsePayload ?? {}
+}
+
 function normalizeExternalRecipe(recipe) {
   return {
     id: recipe.id,
@@ -187,20 +242,15 @@ function normalizeExternalFilters(filters = {}) {
 }
 
 async function fetchExternalRecipeSearch(searchQuery, filters = {}, offset = 0) {
-  if (!firebaseFunctions) {
-    return {
-      recipes: [],
-      totalResults: 0,
-      hasMore: false,
-      nextOffset: offset,
-    }
-  }
-
-  const callable = httpsCallable(firebaseFunctions, 'searchRecipes')
   const normalizedFilters = normalizeExternalFilters(filters)
-  const response = await callable({ query: searchQuery, filters: normalizedFilters, offset })
-  const recipes = normalizeList(response.data?.results).map(normalizeExternalRecipe)
-  const totalResults = response.data?.totalResults ?? recipes.length
+  const payload = await callRecipeFunction('searchRecipes', {
+    query: searchQuery || '',
+    filters: normalizedFilters,
+    offset,
+  })
+
+  const recipes = normalizeList(payload.results).map(normalizeExternalRecipe)
+  const totalResults = payload.totalResults ?? recipes.length
   const nextOffset = offset + recipes.length
 
   return {
@@ -208,18 +258,13 @@ async function fetchExternalRecipeSearch(searchQuery, filters = {}, offset = 0) 
     totalResults,
     hasMore: nextOffset < totalResults,
     nextOffset,
-    quotaExceeded: Boolean(response.data?.quotaExceeded),
+    quotaExceeded: Boolean(payload.quotaExceeded),
   }
 }
 
 async function fetchExternalRecipeById(recipeId) {
-  if (!firebaseFunctions) {
-    return null
-  }
-
-  const callable = httpsCallable(firebaseFunctions, 'getExternalRecipe')
-  const response = await callable({ recipeId })
-  return response.data?.recipe ? normalizeExternalRecipe(response.data.recipe) : null
+  const payload = await callRecipeFunction('getExternalRecipe', { recipeId })
+  return payload.recipe ? normalizeExternalRecipe(payload.recipe) : null
 }
 
 function getRecipeIdentity(recipe) {
@@ -517,6 +562,14 @@ export async function deleteRecipe(recipeId) {
 
 export async function listRecipes({ searchQuery = '', filters = {}, externalOffset = 0 } = {}) {
   let internalRecipes = []
+  let externalPayload = {
+    recipes: [],
+    totalResults: 0,
+    hasMore: false,
+    nextOffset: externalOffset,
+    quotaExceeded: false,
+    error: null,
+  }
 
   if (externalOffset === 0) {
     if (isFirebaseConfigured && firestoreDb) {
@@ -531,12 +584,18 @@ export async function listRecipes({ searchQuery = '', filters = {}, externalOffs
     }
   }
 
-  const externalPayload = await fetchExternalRecipeSearch(searchQuery, filters, externalOffset).catch(() => ({
-    recipes: [],
-    totalResults: 0,
-    hasMore: false,
-    nextOffset: externalOffset,
-  }))
+  try {
+    externalPayload = await fetchExternalRecipeSearch(searchQuery, filters, externalOffset)
+  } catch (error) {
+    externalPayload = {
+      recipes: [],
+      totalResults: 0,
+      hasMore: false,
+      nextOffset: externalOffset,
+      quotaExceeded: false,
+      error: createExternalRecipeLoadError(error).message,
+    }
+  }
 
   return {
     recipes: mergeRecipeCollections(internalRecipes, externalPayload.recipes),
@@ -544,6 +603,7 @@ export async function listRecipes({ searchQuery = '', filters = {}, externalOffs
     hasMore: externalPayload.hasMore,
     nextOffset: externalPayload.nextOffset,
     quotaExceeded: externalPayload.quotaExceeded ?? false,
+    externalError: externalPayload.error ?? null,
   }
 }
 
