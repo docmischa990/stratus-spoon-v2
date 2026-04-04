@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { Link, NavLink } from 'react-router-dom'
+import { Link, NavLink } from '@/lib/router'
 import { Button } from '@/components/ui/Button'
 import { useAuth } from '@/context/useAuth'
 import { useUIStore } from '@/store/uiStore'

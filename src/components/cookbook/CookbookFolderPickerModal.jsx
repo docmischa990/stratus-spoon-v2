@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { Link } from 'react-router-dom'
+import { Link } from '@/lib/router'
 import { Button } from '@/components/ui/Button'
 import { useAuth } from '@/context/useAuth'
 import { useCookbook, useToggleCollectionRecipe } from '@/hooks/useCookbook'

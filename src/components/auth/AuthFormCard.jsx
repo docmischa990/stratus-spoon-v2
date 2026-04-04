@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { useId, useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from '@/lib/router'
 import { Button } from '@/components/ui/Button'
 import { useAuth } from '@/context/useAuth'
 import { getReadableAuthError } from '@/services/firebase/authErrors'
@@ -35,7 +35,8 @@ export function AuthFormCard({ mode = 'login' }) {
   const [errorMessage, setErrorMessage] = useState('')
   const [phoneStep, setPhoneStep] = useState('enter-phone')
 
-  const redirectTarget = location.state?.from?.pathname || '/cookbook'
+  const redirectSearch = typeof window !== 'undefined' ? new URLSearchParams(location.search).get('redirect') : null
+  const redirectTarget = redirectSearch || '/cookbook'
 
   function updateField(name, value) {
     setFormState((current) => ({
@@ -144,7 +145,7 @@ export function AuthFormCard({ mode = 'login' }) {
         <p className="text-sm leading-6 text-text-muted">
           {isConfigured
             ? 'Use your Firebase-backed account to access protected cookbook and creation workflows.'
-            : 'Firebase is not configured yet. Add the Vite Firebase environment variables to enable login.'}
+            : 'Firebase is not configured yet. Add the Next.js public Firebase environment variables to enable login.'}
         </p>
       </div>
       <form className="mt-6 space-y-4" onSubmit={handleSubmit}>

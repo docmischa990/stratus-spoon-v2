@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link } from '@/lib/router'
 import { Button } from '@/components/ui/Button'
 import { useAuth } from '@/context/useAuth'
 import { RecipeGrid } from '@/components/recipes/RecipeGrid'

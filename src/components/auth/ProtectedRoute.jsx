@@ -1,4 +1,4 @@
-import { Navigate, useLocation } from 'react-router-dom'
+import { Navigate, useLocation } from '@/lib/router'
 import { useAuth } from '@/context/useAuth'
 
 export function ProtectedRoute({ children }) {
@@ -16,7 +16,7 @@ export function ProtectedRoute({ children }) {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace state={{ from: location }} />
+    return <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname || '/cookbook')}`} replace />
   }
 
   return children
