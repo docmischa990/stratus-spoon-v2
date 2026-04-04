@@ -73,6 +73,7 @@ export function useToggleFavorite(recipe) {
         return {
           ...current,
           favorites: nextFavorites,
+          favoriteRecipes: nextFavorites,
         }
       })
 

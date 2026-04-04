@@ -21,6 +21,25 @@ function normalizeList(value) {
   return Array.isArray(value) ? value : []
 }
 
+function buildRecipeSnapshotFallback(recipeId, recipeSnapshot) {
+  if (!recipeSnapshot) {
+    return null
+  }
+
+  return normalizeRecipe(recipeId, {
+    title: recipeSnapshot.title,
+    description: '',
+    imageUrl: recipeSnapshot.imageUrl,
+    category: recipeSnapshot.category || 'Saved',
+    tags: [],
+    sourceType: 'internal',
+    totalTime: 'Saved',
+    notes: '',
+    ingredients: [],
+    steps: [],
+  })
+}
+
 function normalizeIngredients(ingredients) {
   return normalizeList(ingredients).map((ingredient) => {
     if (typeof ingredient === 'string') {
@@ -96,27 +115,25 @@ async function getFavorites(userId) {
   const favoriteDocs = await Promise.all(
     favoritesSnapshot.docs.map(async (favoriteDoc) => {
       const favoriteData = favoriteDoc.data()
-      const recipeRef = doc(firestoreDb, 'recipes', favoriteDoc.id)
-      const recipeSnapshot = await getDoc(recipeRef)
+      const fallbackRecipe = buildRecipeSnapshotFallback(favoriteDoc.id, favoriteData.recipeSnapshot)
 
-      if (!recipeSnapshot.exists()) {
-        return favoriteData.recipeSnapshot
-          ? normalizeRecipe(favoriteDoc.id, {
-              title: favoriteData.recipeSnapshot.title,
-              description: '',
-              imageUrl: favoriteData.recipeSnapshot.imageUrl,
-              category: favoriteData.recipeSnapshot.category || 'Saved',
-              tags: [],
-              sourceType: 'internal',
-              totalTime: 'Saved',
-              notes: '',
-              ingredients: [],
-              steps: [],
-            })
-          : null
+      if (String(favoriteDoc.id).startsWith('external:')) {
+        return fallbackRecipe
       }
 
-      return normalizeRecipe(recipeSnapshot.id, recipeSnapshot.data())
+      try {
+        const recipeRef = doc(firestoreDb, 'recipes', favoriteDoc.id)
+        const recipeSnapshot = await getDoc(recipeRef)
+
+        if (!recipeSnapshot.exists()) {
+          return fallbackRecipe
+        }
+
+        return normalizeRecipe(recipeSnapshot.id, recipeSnapshot.data())
+      } catch (error) {
+        console.warn(`Unable to load favorite recipe ${favoriteDoc.id}. Falling back to saved snapshot.`, error)
+        return fallbackRecipe
+      }
     }),
   )
 
@@ -169,11 +186,27 @@ export async function getCookbookSummary() {
   }
 
   const userId = getCurrentUserId()
-  const [favorites, createdRecipes, collections] = await Promise.all([
+  const [favoritesResult, createdRecipesResult, collectionsResult] = await Promise.allSettled([
     getFavorites(userId),
     getMyRecipes(userId),
     getCollections(userId),
   ])
+
+  if (favoritesResult.status === 'rejected') {
+    console.warn('Unable to load favorites.', favoritesResult.reason)
+  }
+
+  if (createdRecipesResult.status === 'rejected') {
+    console.warn('Unable to load created recipes.', createdRecipesResult.reason)
+  }
+
+  if (collectionsResult.status === 'rejected') {
+    console.warn('Unable to load collections.', collectionsResult.reason)
+  }
+
+  const favorites = favoritesResult.status === 'fulfilled' ? favoritesResult.value : []
+  const createdRecipes = createdRecipesResult.status === 'fulfilled' ? createdRecipesResult.value : []
+  const collections = collectionsResult.status === 'fulfilled' ? collectionsResult.value : []
 
   return {
     favorites,
