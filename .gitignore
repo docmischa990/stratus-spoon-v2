@@ -15,6 +15,8 @@ dist
 dist-ssr
 build
 coverage
+.next
+out
 
 # Local environment variables (VERY IMPORTANT)
 .env

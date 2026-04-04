@@ -29,7 +29,7 @@ The goal of this project is to evolve Stratus Spoon into a **production-ready re
 ## APIs
 
 * Recipe data API
-* AI image generation API
+* AI recipe image generation API
 
 ---
 
@@ -74,7 +74,7 @@ Authenticated users can:
 
 * Create new recipes
 * Upload recipe images
-* Generate AI images for recipes
+* Generate AI images for recipes during recipe creation and editing
 * Save recipes to the database
 
 Recipes will be stored in **Firebase Firestore**.
@@ -85,12 +85,13 @@ Images will be stored in **Firebase Storage**.
 
 ## AI Image Generation
 
-Users will have the option to generate images for recipes using an AI image generation API.
+Authenticated users can generate recipe images using the app's AI image generation flow.
 
 Generated images will:
 
 * Be saved to Firebase Storage
 * Be linked to recipe records in Firestore
+* Be available for selection as the canonical recipe image
 
 ---
 
