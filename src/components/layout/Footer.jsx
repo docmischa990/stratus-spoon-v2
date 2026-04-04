@@ -9,8 +9,7 @@ export function Footer() {
       className="border-t border-border bg-surface-muted/50"
       variants={fadeUpVariant}
       initial="initial"
-      whileInView="animate"
-      viewport={{ once: true, amount: 0.5 }}
+      animate="animate"
       transition={pageTransition}
     >
       <div className="container flex flex-col gap-3 py-8 text-sm text-text-muted md:flex-row md:items-center md:justify-between">

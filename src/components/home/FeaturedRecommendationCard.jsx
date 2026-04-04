@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link } from '@/lib/router'
 import { CookbookFolderPickerModal } from '@/components/cookbook/CookbookFolderPickerModal'
 import { FavoriteToggleButton } from '@/components/cookbook/FavoriteToggleButton'
 import { AppImage } from '@/components/ui/AppImage'

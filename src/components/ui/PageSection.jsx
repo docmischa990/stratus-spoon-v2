@@ -10,8 +10,7 @@ export function PageSection({ className, children }) {
       className={cn('py-8 md:py-12', className)}
       variants={fadeUpVariant}
       initial="initial"
-      whileInView="animate"
-      viewport={{ once: true, amount: 0.15 }}
+      animate="animate"
       transition={pageTransition}
     >
       {children}

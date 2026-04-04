@@ -11,8 +11,7 @@ export function SectionHeading({ eyebrow, title, description, align = 'left' }) 
       className={`flex max-w-2xl flex-col gap-3 ${alignment}`}
       variants={fadeUpVariant}
       initial="initial"
-      whileInView="animate"
-      viewport={{ once: true, amount: 0.4 }}
+      animate="animate"
       transition={pageTransition}
     >
       {eyebrow ? (

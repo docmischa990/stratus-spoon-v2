@@ -10,8 +10,7 @@ export function RecipeGrid({ recipes }) {
       className="grid gap-6 md:grid-cols-2 xl:grid-cols-3"
       variants={staggerContainerVariant}
       initial="initial"
-      whileInView="animate"
-      viewport={{ once: true, amount: 0.1 }}
+      animate="animate"
     >
       {recipes.map((recipe) => (
         <RecipeCard key={recipe.id} recipe={recipe} />

@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { Link, NavLink } from 'react-router-dom'
+import { Link, NavLink } from '@/lib/router'
 import { Button } from '@/components/ui/Button'
 import { useAuth } from '@/context/useAuth'
 import { useUIStore } from '@/store/uiStore'
@@ -7,7 +7,7 @@ import { cn } from '@/utils/cn'
 import { pageTransition } from '@/utils/motion'
 
 const MotionHeader = motion.header
-const MotionNavLink = motion(NavLink)
+const MotionNavLink = motion.create(NavLink)
 
 const navigation = [
   { to: '/', label: 'Home' },

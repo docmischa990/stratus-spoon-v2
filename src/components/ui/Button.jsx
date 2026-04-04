@@ -13,8 +13,15 @@ export function Button({
   variant = 'primary',
   ...props
 }) {
+  const elementProps = { ...props }
+
+  if (elementProps.to && !elementProps.href) {
+    elementProps.href = elementProps.to
+    delete elementProps.to
+  }
+
   return createElement(as, {
     className: cn(variants[variant], className),
-    ...props,
+    ...elementProps,
   })
 }
