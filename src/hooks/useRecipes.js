@@ -8,6 +8,7 @@ import {
   updateRecipe,
 } from '@/services/recipes/recipeService'
 import { trackRecipeCreated, trackRecipeImported } from '@/services/analytics/analyticsService'
+import { recordImport } from '@/services/behaviour/behaviourService'
 
 function patchRecipeInList(recipes, recipeId, updater) {
   if (!Array.isArray(recipes)) {
@@ -237,7 +238,7 @@ export function useImportExternalRecipeMutation() {
 
   return useMutation({
     mutationFn: importExternalRecipe,
-    onSuccess: async (recipeId) => {
+    onSuccess: async (recipeId, variables) => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['recipes'] }),
         queryClient.invalidateQueries({ queryKey: ['cookbook'] }),
@@ -249,6 +250,8 @@ export function useImportExternalRecipeMutation() {
         recipeId,
         source: 'spoonacular',
       })
+
+      recordImport({ recipeId, recipe: variables })
 
       return recipeId
     },
