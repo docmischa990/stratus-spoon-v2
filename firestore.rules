@@ -47,12 +47,15 @@ service cloud.firestore {
       allow delete: if isOwner(resource.data.ownerId);
     }
 
+    // recipeStats: public read, authenticated write (increments only).
+    // Delete is intentionally not allowed — stats are append-only counters.
     match /recipeStats/{recipeId} {
       allow read: if true;
       allow create: if isSignedIn();
       allow update: if isSignedIn()
         && request.resource.data.diff(resource.data).affectedKeys()
             .hasOnly(['viewCount', 'likeCount', 'dislikeCount', 'favoriteCount', 'importCount', 'updatedAt']);
+      allow delete: if false;
     }
   }
 }
