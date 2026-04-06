@@ -76,52 +76,6 @@ function isHealthyRecipe(recipe, dietaryTags = []) {
   )
 }
 
-function buildPreferenceSets(favorites = []) {
-  const tagCounts = new Map()
-  const categoryCounts = new Map()
-
-  favorites.forEach((recipe) => {
-    const { tags, category } = getRecipeSignals(recipe)
-
-    tags.forEach((tag) => {
-      tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1)
-    })
-
-    if (category) {
-      categoryCounts.set(category, (categoryCounts.get(category) ?? 0) + 1)
-    }
-  })
-
-  return { tagCounts, categoryCounts }
-}
-
-function scoreRecipe(recipe, preferences) {
-  const { tags, category } = getRecipeSignals(recipe)
-  const tagScore = tags.reduce((total, tag) => total + (preferences.tagCounts.get(tag) ?? 0), 0)
-  const categoryScore = preferences.categoryCounts.get(category) ?? 0
-
-  return tagScore * 2 + categoryScore
-}
-
-function sortByPreference(recipes, preferences, excludedIds = new Set()) {
-  return recipes
-    .filter((recipe) => !excludedIds.has(recipe.id))
-    .map((recipe, index) => ({
-      recipe,
-      score: scoreRecipe(recipe, preferences),
-      index,
-    }))
-    .filter((entry) => entry.score > 0)
-    .sort((left, right) => {
-      if (right.score !== left.score) {
-        return right.score - left.score
-      }
-
-      return left.index - right.index
-    })
-    .map((entry) => entry.recipe)
-}
-
 async function loadPersonalizationInputs() {
   if (!firebaseAuth?.currentUser) {
     return {
