@@ -1,5 +1,6 @@
 import {
   addDoc,
+  arrayRemove,
   arrayUnion,
   collection,
   deleteDoc,
@@ -422,11 +423,17 @@ export async function rateRecipe({ recipeId, rating, previousRating }) {
 export async function removeRating({ recipeId, previousRating }) {
   const userId = getCurrentUserId()
   const ratingRef = doc(firestoreDb, 'users', userId, 'ratings', recipeId)
+  const behaviourRef = doc(firestoreDb, 'users', userId, 'behaviour')
+
   await deleteDoc(ratingRef)
 
   // Decrement the stat
   if (previousRating) {
     const field = previousRating === 'like' ? 'likeCount' : 'dislikeCount'
     await decrementStat({ recipeId, field })
+
+    // Remove from behaviour signals so recommendation engine reflects the removal
+    const behaviourField = previousRating === 'like' ? 'likedRecipeIds' : 'dislikedRecipeIds'
+    await setDoc(behaviourRef, { [behaviourField]: arrayRemove(recipeId) }, { merge: true })
   }
 }
