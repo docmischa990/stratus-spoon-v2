@@ -15,6 +15,8 @@ const STATS_DEFAULTS = {
   importCount: 0,
 }
 
+const VALID_STAT_FIELDS = new Set(Object.keys(STATS_DEFAULTS))
+
 export async function getRecipeStats(recipeId) {
   if (!firestoreDb || !recipeId) return { ...STATS_DEFAULTS }
 
@@ -40,7 +42,7 @@ export async function getMultipleRecipeStats(recipeIds) {
 }
 
 export async function incrementStat({ recipeId, field }) {
-  if (!firestoreDb || !recipeId || !field) return
+  if (!firestoreDb || !recipeId || !field || !VALID_STAT_FIELDS.has(field)) return
 
   const ref = doc(firestoreDb, 'recipeStats', recipeId)
 
@@ -56,7 +58,7 @@ export async function incrementStat({ recipeId, field }) {
 }
 
 export async function decrementStat({ recipeId, field }) {
-  if (!firestoreDb || !recipeId || !field) return
+  if (!firestoreDb || !recipeId || !field || !VALID_STAT_FIELDS.has(field)) return
 
   const ref = doc(firestoreDb, 'recipeStats', recipeId)
 
