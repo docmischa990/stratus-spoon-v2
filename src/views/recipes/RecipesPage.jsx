@@ -8,6 +8,7 @@ import { SectionHeading } from '@/components/ui/SectionHeading'
 import { useRecipes } from '@/hooks/useRecipes'
 import { useUIStore } from '@/store/uiStore'
 import { trackSearchQuery } from '@/services/analytics/analyticsService'
+import { recordSearch } from '@/services/behaviour/behaviourService'
 
 function normalizeValue(value) {
   return String(value ?? '').trim().toLowerCase()
@@ -49,6 +50,7 @@ export function RecipesPage() {
         searchTerm: searchQuery.trim(),
         resultCount: filteredRecipes.length,
       })
+      recordSearch({ searchTerm: searchQuery.trim() })
     }, 500)
 
     return () => clearTimeout(searchTimerRef.current)
