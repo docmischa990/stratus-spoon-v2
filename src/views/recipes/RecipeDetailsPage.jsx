@@ -9,6 +9,7 @@ import { PageSection } from '@/components/ui/PageSection'
 import { useAuth } from '@/context/useAuth'
 import { useRecipe } from '@/hooks/useRecipes'
 import { trackRecipeView } from '@/services/analytics/analyticsService'
+import { recordRecipeView } from '@/services/behaviour/behaviourService'
 
 export function RecipeDetailsPage() {
   const { recipeId } = useParams()
@@ -22,6 +23,7 @@ export function RecipeDetailsPage() {
       title: recipe.title,
       source: recipe.sourceType === 'internal' ? 'internal' : 'external',
     })
+    recordRecipeView({ recipeId: recipe.id, recipe })
   }, [recipe?.id])
 
   if (isLoading) {
