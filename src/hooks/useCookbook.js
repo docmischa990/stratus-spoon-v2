@@ -10,6 +10,13 @@ import {
   saveFavorite,
   updateCollection,
 } from '@/services/cookbook/cookbookService'
+import {
+  trackFavoriteAdded,
+  trackFavoriteRemoved,
+  trackCollectionCreated,
+  trackRecipeAddedToCollection,
+  trackRecipeRemovedFromCollection,
+} from '@/services/analytics/analyticsService'
 
 function patchCollections(collections, collectionId, updater) {
   if (!Array.isArray(collections)) {
@@ -103,6 +110,12 @@ export function useToggleFavorite(recipe) {
     },
     onSuccess: (nextValue) => {
       queryClient.setQueryData(['favorite-status', recipe.id], nextValue)
+
+      if (nextValue) {
+        trackFavoriteAdded({ recipeId: recipe.id, recipeTitle: recipe.title })
+      } else {
+        trackFavoriteRemoved({ recipeId: recipe.id, recipeTitle: recipe.title })
+      }
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['cookbook'] })
@@ -167,10 +180,12 @@ export function useCreateCollection() {
       queryClient.setQueryData(['cookbook'], context.previousCookbook)
       queryClient.setQueryData(['profile'], context.previousProfile)
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['cookbook'] })
       queryClient.invalidateQueries({ queryKey: ['profile'] })
       queryClient.invalidateQueries({ queryKey: ['recommendations'] })
+
+      trackCollectionCreated({ collectionName: variables.name.trim() })
     },
   })
 }
@@ -319,6 +334,21 @@ export function useToggleCollectionRecipe(recipe) {
       )
 
       return { previousCookbook }
+    },
+    onSuccess: (nextValue, variables) => {
+      const targetRecipe = variables.recipeOverride ?? recipe
+
+      if (nextValue) {
+        trackRecipeAddedToCollection({
+          recipeId: targetRecipe.id,
+          collectionId: variables.collectionId,
+        })
+      } else {
+        trackRecipeRemovedFromCollection({
+          recipeId: targetRecipe.id,
+          collectionId: variables.collectionId,
+        })
+      }
     },
     onError: (_error, _variables, context) => {
       if (!context) {

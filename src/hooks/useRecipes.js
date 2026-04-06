@@ -7,6 +7,7 @@ import {
   listRecipes,
   updateRecipe,
 } from '@/services/recipes/recipeService'
+import { trackRecipeCreated, trackRecipeImported } from '@/services/analytics/analyticsService'
 
 function patchRecipeInList(recipes, recipeId, updater) {
   if (!Array.isArray(recipes)) {
@@ -39,13 +40,19 @@ export function useCreateRecipeMutation() {
 
   return useMutation({
     mutationFn: createRecipe,
-    onSuccess: async (recipeId) => {
+    onSuccess: async (recipeId, variables) => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['recipes'] }),
         queryClient.invalidateQueries({ queryKey: ['cookbook'] }),
         queryClient.invalidateQueries({ queryKey: ['profile'] }),
         queryClient.invalidateQueries({ queryKey: ['recommendations'] }),
       ])
+
+      trackRecipeCreated({
+        recipeId,
+        hasImage: Boolean(variables.imageFile || variables.generatedImage),
+        usedAiImage: Boolean(variables.generatedImage),
+      })
 
       return recipeId
     },
@@ -237,6 +244,11 @@ export function useImportExternalRecipeMutation() {
         queryClient.invalidateQueries({ queryKey: ['profile'] }),
         queryClient.invalidateQueries({ queryKey: ['recommendations'] }),
       ])
+
+      trackRecipeImported({
+        recipeId,
+        source: 'spoonacular',
+      })
 
       return recipeId
     },

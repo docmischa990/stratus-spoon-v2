@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useParams } from '@/lib/router'
 import { OwnerRecipeActions } from '@/components/recipes/OwnerRecipeActions'
 import { IngredientList } from '@/components/recipes/IngredientList'
@@ -7,11 +8,21 @@ import { StepList } from '@/components/recipes/StepList'
 import { PageSection } from '@/components/ui/PageSection'
 import { useAuth } from '@/context/useAuth'
 import { useRecipe } from '@/hooks/useRecipes'
+import { trackRecipeView } from '@/services/analytics/analyticsService'
 
 export function RecipeDetailsPage() {
   const { recipeId } = useParams()
   const { user } = useAuth()
   const { data: recipe, isLoading, isError } = useRecipe(recipeId)
+
+  useEffect(() => {
+    if (!recipe) return
+    trackRecipeView({
+      recipeId: recipe.id,
+      title: recipe.title,
+      source: recipe.sourceType === 'internal' ? 'internal' : 'external',
+    })
+  }, [recipe?.id])
 
   if (isLoading) {
     return (

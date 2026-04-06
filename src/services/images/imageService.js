@@ -1,3 +1,5 @@
+import { trackAiImageGenerated } from '@/services/analytics/analyticsService'
+
 export async function getImageGenerationPresets() {
   return [
     'Soft daylight editorial',
@@ -31,8 +33,6 @@ function mapImageGenerationError(error) {
 }
 
 export async function generateRecipeImage({ title, description, recipeId = 'draft' }) {
-  void recipeId
-
   if (!title?.trim()) {
     throw new Error('Recipe title is required to generate an AI image.')
   }
@@ -71,6 +71,12 @@ export async function generateRecipeImage({ title, description, recipeId = 'draf
       throw new Error('Image generation did not return a valid image URL.')
     }
 
+    trackAiImageGenerated({
+      recipeId,
+      recipeTitle: title.trim(),
+      success: true,
+    })
+
     return {
       image: {
         url: payload.imageUrl,
@@ -81,6 +87,11 @@ export async function generateRecipeImage({ title, description, recipeId = 'draf
       remaining: payload.remaining,
     }
   } catch (error) {
+    trackAiImageGenerated({
+      recipeId,
+      recipeTitle: title?.trim() ?? '',
+      success: false,
+    })
     throw mapImageGenerationError(error)
   } finally {
     window.clearTimeout(timeoutId)

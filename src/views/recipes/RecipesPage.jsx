@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { FilterPanel } from '@/components/search/FilterPanel'
 import { Button } from '@/components/ui/Button'
 import { SearchBar } from '@/components/search/SearchBar'
@@ -6,6 +7,7 @@ import { PageSection } from '@/components/ui/PageSection'
 import { SectionHeading } from '@/components/ui/SectionHeading'
 import { useRecipes } from '@/hooks/useRecipes'
 import { useUIStore } from '@/store/uiStore'
+import { trackSearchQuery } from '@/services/analytics/analyticsService'
 
 function normalizeValue(value) {
   return String(value ?? '').trim().toLowerCase()
@@ -35,6 +37,22 @@ export function RecipesPage() {
 
     return matchesCategory && matchesTag && matchesSource
   })
+
+  const searchTimerRef = useRef(null)
+
+  useEffect(() => {
+    if (!searchQuery.trim()) return
+
+    clearTimeout(searchTimerRef.current)
+    searchTimerRef.current = setTimeout(() => {
+      trackSearchQuery({
+        searchTerm: searchQuery.trim(),
+        resultCount: filteredRecipes.length,
+      })
+    }, 500)
+
+    return () => clearTimeout(searchTimerRef.current)
+  }, [searchQuery, filteredRecipes.length])
 
   return (
     <PageSection className="pt-10 md:pt-14">

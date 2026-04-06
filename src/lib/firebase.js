@@ -1,5 +1,6 @@
 export {
   firebaseApp,
+  getAnalyticsInstance,
   firebaseAuth,
   firebaseFunctions,
   firebaseStorage,
