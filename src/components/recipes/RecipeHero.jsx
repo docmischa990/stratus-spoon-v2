@@ -3,6 +3,7 @@ import { CookbookFolderPickerModal } from '@/components/cookbook/CookbookFolderP
 import { Button } from '@/components/ui/Button'
 import { AppImage } from '@/components/ui/AppImage'
 import { FavoriteToggleButton } from '@/components/cookbook/FavoriteToggleButton'
+import { RecipeLikeDislike } from '@/components/recipes/RecipeLikeDislike'
 import { useAuth } from '@/context/useAuth'
 import { useImportExternalRecipeMutation } from '@/hooks/useRecipes'
 
@@ -29,6 +30,9 @@ export function RecipeHero({ recipe }) {
         </div>
         <div className="flex flex-wrap gap-3">
           <FavoriteToggleButton recipe={recipe} variant="primary" />
+          {recipe.sourceType !== 'internal' && (
+            <RecipeLikeDislike recipe={recipe} />
+          )}
           {isLiveApiRecipe ? (
             <Button
               type="button"
