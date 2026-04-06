@@ -5,6 +5,7 @@ const {
   searchSpoonacularRecipes,
 } = require("./src/recipes/spoonacular");
 const {generateAndStoreRecipeImage} = require("./src/images/generateRecipeImage");
+const { findRecipesByIngredients } = require("./src/recipes/pantryRecipes");
 
 exports.importRecipes = importRecipes;
 exports.searchRecipes = onCall({secrets: ["SPOONACULAR_API_KEY"]}, async (request) => {
@@ -53,8 +54,6 @@ exports.getExternalRecipe = onCall({secrets: ["SPOONACULAR_API_KEY"]}, async (re
     recipe,
   };
 });
-
-const { findRecipesByIngredients } = require("./src/recipes/pantryRecipes");
 
 exports.generatePantryRecipes = onCall(
   { secrets: ["SPOONACULAR_API_KEY"] },

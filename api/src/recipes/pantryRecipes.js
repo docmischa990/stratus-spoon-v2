@@ -14,8 +14,11 @@ async function findRecipesByIngredients(ingredients) {
 
   // findByIngredients returns summary objects, not full recipes — we need a
   // second call per result to get steps/instructions.
+  const sanitised = ingredients.map((x) => String(x).trim()).filter(Boolean)
+  if (sanitised.length === 0) return []
+
   const summaries = await spoonacularFetch("/findByIngredients", {
-    ingredients: ingredients.join(","),
+    ingredients: sanitised.join(","),
     number: 5,
     ranking: 1,       // maximise used ingredients
     ignorePantry: true,
