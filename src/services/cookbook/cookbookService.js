@@ -1,5 +1,6 @@
 import {
   addDoc,
+  arrayUnion,
   collection,
   deleteDoc,
   doc,
@@ -16,6 +17,7 @@ import {
 import { firebaseAuth, firestoreDb, isFirebaseConfigured } from '@/lib/firebase'
 import { adjustProfileCounters } from '@/services/profiles/profileCounters'
 import { listRecipes } from '@/services/recipes/recipeService'
+import { decrementStat, incrementStat } from '@/services/recipes/recipeStatsService'
 
 function normalizeList(value) {
   return Array.isArray(value) ? value : []
@@ -376,5 +378,61 @@ export async function removeRecipeFromCollection({ collectionId, recipeId }) {
       recipeCount: increment(-1),
       updatedAt: serverTimestamp(),
     })
+  }
+}
+
+export async function getUserRating(recipeId) {
+  const userId = getCurrentUserId()
+  if (!userId || !firestoreDb) return null
+
+  const ref = doc(firestoreDb, 'users', userId, 'ratings', recipeId)
+  const snap = await getDoc(ref)
+
+  if (!snap.exists()) return null
+  return snap.data().rating // 'like' | 'dislike'
+}
+
+export async function rateRecipe({ recipeId, rating, previousRating }) {
+  const userId = getCurrentUserId()
+  if (!userId || !firestoreDb) return
+
+  const ratingRef = doc(firestoreDb, 'users', userId, 'ratings', recipeId)
+  const behaviourRef = doc(firestoreDb, 'users', userId, 'behaviour')
+
+  // Write the rating document
+  await setDoc(ratingRef, {
+    rating,
+    createdAt: serverTimestamp(),
+  })
+
+  // If switching rating, undo the previous count first
+  if (previousRating && previousRating !== rating) {
+    const prevField = previousRating === 'like' ? 'likeCount' : 'dislikeCount'
+    await decrementStat({ recipeId, field: prevField })
+  }
+
+  // Increment the new rating count
+  const newField = rating === 'like' ? 'likeCount' : 'dislikeCount'
+  await incrementStat({ recipeId, field: newField })
+
+  // Mirror to behaviour document for recommendation engine
+  const behaviourUpdate = rating === 'like'
+    ? { likedRecipeIds: arrayUnion(recipeId) }
+    : { dislikedRecipeIds: arrayUnion(recipeId) }
+
+  await setDoc(behaviourRef, behaviourUpdate, { merge: true })
+}
+
+export async function removeRating({ recipeId, previousRating }) {
+  const userId = getCurrentUserId()
+  if (!userId || !firestoreDb) return
+
+  const ratingRef = doc(firestoreDb, 'users', userId, 'ratings', recipeId)
+  await deleteDoc(ratingRef)
+
+  // Decrement the stat
+  if (previousRating) {
+    const field = previousRating === 'like' ? 'likeCount' : 'dislikeCount'
+    await decrementStat({ recipeId, field })
   }
 }
