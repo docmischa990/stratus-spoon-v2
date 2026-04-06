@@ -54,6 +54,20 @@ exports.getExternalRecipe = onCall({secrets: ["SPOONACULAR_API_KEY"]}, async (re
   };
 });
 
+const { findRecipesByIngredients } = require("./src/recipes/pantryRecipes");
+
+exports.generatePantryRecipes = onCall(
+  { secrets: ["SPOONACULAR_API_KEY"] },
+  async (request) => {
+    const ingredients = request.data?.ingredients;
+    if (!Array.isArray(ingredients) || ingredients.length === 0) {
+      throw new HttpsError("invalid-argument", "ingredients must be a non-empty array.");
+    }
+    const recipes = await findRecipesByIngredients(ingredients.slice(0, 30));
+    return { ok: true, recipes };
+  }
+);
+
 exports.generateRecipeImage = onCall(async (request) => {
   const title = request.data?.title ?? "";
   const description = request.data?.description ?? "";

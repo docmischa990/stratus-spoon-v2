@@ -171,4 +171,6 @@ async function fetchSpoonacularRecipeById(recipeId) {
 module.exports = {
   fetchSpoonacularRecipeById,
   searchSpoonacularRecipes,
+  spoonacularFetch,
+  normalizeExternalRecipe,
 };
