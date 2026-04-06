@@ -61,6 +61,41 @@ Commit Hash:
 267d324
 
 ---
+Timestamp: 2026-04-07T00:00:00Z
+Agent: Claude (claude-sonnet-4-6)
+
+Action:
+feat — Behaviour Tracking & Smart Recommendations
+
+Files Modified:
+- src/utils/ingredientParser.js (created)
+- src/services/behaviour/behaviourService.js (created)
+- src/views/recipes/RecipeDetailsPage.jsx
+- src/views/recipes/RecipesPage.jsx
+- src/hooks/useRecipes.js
+- src/services/recommendations/recommendationService.js
+
+Summary:
+Added per-user behaviour tracking (views, searches, imports) written to users/{uid}/behaviour/signals
+in Firestore alongside existing analytics events. Created ingredient keyword extractor that strips
+units/quantities/punctuation from free-text ingredient strings using Set-based deduplication.
+Overhauled getRecommendedRecipes to build a weighted preference profile: cookbook favorites contribute
+ingredient/tag/category signals at 1x, liked recipes at 2x. Scoring weights: ingredient match x3,
+tag x2, category x1.5, search overlap x2, dislike penalty -3/-4 per keyword/tag, popularity bonus
+0-1 (like ratio). Disliked recipes are filtered out of the candidate pool entirely. Replaced
+getTrendingRecipes with real stats-based scoring (viewCount + likeCount x2 + favoriteCount x1.5).
+All async calls are guarded with .catch() fallbacks so partial Firestore failures never crash the
+homepage. getQuickRecipes and getHealthyRecipes are unchanged.
+
+Reason:
+Closes the loop between analytics data collection and product recommendations. Users who browse
+egg/beef recipes are now recommended similar recipes. Disliked recipes are suppressed. Trending
+recipes reflect genuine popularity rather than just recency.
+
+Commit Hash:
+f949057
+
+---
 Timestamp: 2026-04-06T12:00:00Z
 Agent: Claude (claude-sonnet-4-6)
 
