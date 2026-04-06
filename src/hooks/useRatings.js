@@ -65,7 +65,8 @@ export function useRateRecipeMutation(recipeId) {
       return { previousRatingData, previousStats }
     },
 
-    onError: (_error, _variables, context) => {
+    onError: (error, _variables, context) => {
+      console.error('[useRateRecipeMutation] Failed:', error)
       if (!context) return
       queryClient.setQueryData(['rating', recipeId], context.previousRatingData)
       queryClient.setQueryData(['recipeStats', recipeId], context.previousStats)

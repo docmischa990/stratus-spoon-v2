@@ -51,7 +51,7 @@ function ThumbsDownIcon({ filled }) {
   )
 }
 
-const springConfig = { type: 'spring', stiffness: 400, damping: 17 }
+const bounceConfig = { type: 'tween', duration: 0.35, ease: [0.36, 0.07, 0.19, 0.97] }
 
 export function RecipeLikeDislike({ recipe }) {
   const { isAuthenticated } = useAuth()
@@ -97,7 +97,7 @@ export function RecipeLikeDislike({ recipe }) {
         <motion.span
           key={likeAnimKey}
           animate={{ scale: [1, 0.85, 1.15, 1] }}
-          transition={springConfig}
+          transition={bounceConfig}
         >
           <ThumbsUpIcon filled={isLiked} />
         </motion.span>
@@ -121,7 +121,7 @@ export function RecipeLikeDislike({ recipe }) {
         <motion.span
           key={dislikeAnimKey}
           animate={{ scale: [1, 0.85, 1.15, 1] }}
-          transition={springConfig}
+          transition={bounceConfig}
         >
           <ThumbsDownIcon filled={isDisliked} />
         </motion.span>
