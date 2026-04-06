@@ -11,6 +11,7 @@ const MotionAside = motion.aside
 const navigation = [
   { to: '/', label: 'Home' },
   { to: '/recipes', label: 'Recipes' },
+  { to: '/pantry', label: 'Pantry' },
   { to: '/create', label: 'Create recipe' },
   { to: '/cookbook', label: 'Cookbook' },
   { to: '/favorites', label: 'Favorites' },

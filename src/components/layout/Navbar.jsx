@@ -12,6 +12,7 @@ const MotionNavLink = motion.create(NavLink)
 const navigation = [
   { to: '/', label: 'Home' },
   { to: '/recipes', label: 'Recipes' },
+  { to: '/pantry', label: 'Pantry' },
   { to: '/create', label: 'Create' },
   { to: '/cookbook', label: 'Cookbook' },
   { to: '/favorites', label: 'Favorites' },
