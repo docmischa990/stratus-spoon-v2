@@ -158,6 +158,8 @@ function buildFrequencyMap(items) {
 function buildWeightedProfile({ behaviour, favoriteRecipes, likedRecipes, dislikedRecipes }) {
   const ingredientItems = [
     ...behaviour.viewedIngredients,
+    ...favoriteRecipes.flatMap((r) => extractIngredientKeywords(r.ingredients ?? [])),
+    // Liked recipes at 2× weight
     ...likedRecipes.flatMap((r) => extractIngredientKeywords(r.ingredients ?? [])),
     ...likedRecipes.flatMap((r) => extractIngredientKeywords(r.ingredients ?? [])),
   ]
@@ -285,7 +287,10 @@ export async function getHealthyRecipes() {
 export async function getRecommendedRecipes() {
   const [cookbookData, behaviour, allRecipes] = await Promise.all([
     getCookbookSummary().catch(() => ({ favorites: [], createdRecipes: [] })),
-    getBehaviourSignals(),
+    getBehaviourSignals().catch(() => ({
+      viewedRecipeIds: [], viewedIngredients: [], viewedTags: [], viewedCategories: [],
+      searchTerms: [], importedRecipeIds: [], likedRecipeIds: [], dislikedRecipeIds: [],
+    })),
     listInternalRecipes().catch(() => []),
   ])
 
