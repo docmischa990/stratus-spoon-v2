@@ -34,6 +34,10 @@ service cloud.firestore {
       match /behaviour/{docId} {
         allow read, write: if isOwner(userId);
       }
+
+      match /pantry/{ingredientId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
     }
 
     match /recipes/{recipeId} {
