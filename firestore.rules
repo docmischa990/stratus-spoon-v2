@@ -26,6 +26,14 @@ service cloud.firestore {
           allow read, write: if isOwner(userId);
         }
       }
+
+      match /ratings/{recipeId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      match /behaviour {
+        allow read, write: if isOwner(userId);
+      }
     }
 
     match /recipes/{recipeId} {
@@ -37,6 +45,14 @@ service cloud.firestore {
         && request.resource.data.ownerId == request.auth.uid
         && request.resource.data.sourceType == resource.data.sourceType;
       allow delete: if isOwner(resource.data.ownerId);
+    }
+
+    match /recipeStats/{recipeId} {
+      allow read: if true;
+      allow create: if isSignedIn();
+      allow update: if isSignedIn()
+        && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['viewCount', 'likeCount', 'dislikeCount', 'favoriteCount', 'importCount', 'updatedAt']);
     }
   }
 }
