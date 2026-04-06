@@ -31,7 +31,7 @@ service cloud.firestore {
         allow read, write: if isOwner(userId);
       }
 
-      match /behaviour {
+      match /behaviour/{docId} {
         allow read, write: if isOwner(userId);
       }
     }

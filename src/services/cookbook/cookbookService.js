@@ -394,7 +394,7 @@ export async function getUserRating(recipeId) {
 export async function rateRecipe({ recipeId, rating, previousRating }) {
   const userId = getCurrentUserId()
   const ratingRef = doc(firestoreDb, 'users', userId, 'ratings', recipeId)
-  const behaviourRef = doc(firestoreDb, 'users', userId, 'behaviour')
+  const behaviourRef = doc(firestoreDb, 'users', userId, 'behaviour', 'signals')
 
   // Write the rating document
   await setDoc(ratingRef, {
@@ -423,7 +423,7 @@ export async function rateRecipe({ recipeId, rating, previousRating }) {
 export async function removeRating({ recipeId, previousRating }) {
   const userId = getCurrentUserId()
   const ratingRef = doc(firestoreDb, 'users', userId, 'ratings', recipeId)
-  const behaviourRef = doc(firestoreDb, 'users', userId, 'behaviour')
+  const behaviourRef = doc(firestoreDb, 'users', userId, 'behaviour', 'signals')
 
   await deleteDoc(ratingRef)
 
