@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useAuth } from '@/context/useAuth'
 import { useRating, useRecipeStats, useRateRecipeMutation } from '@/hooks/useRatings'
@@ -58,6 +59,9 @@ export function RecipeLikeDislike({ recipe }) {
   const { data: stats } = useRecipeStats(recipe.id)
   const rateMutation = useRateRecipeMutation(recipe.id)
 
+  const [likeAnimKey, setLikeAnimKey] = useState(0)
+  const [dislikeAnimKey, setDislikeAnimKey] = useState(0)
+
   const likeCount = stats?.likeCount ?? 0
   const dislikeCount = stats?.dislikeCount ?? 0
   const isLiked = currentRating === 'like'
@@ -66,6 +70,8 @@ export function RecipeLikeDislike({ recipe }) {
   function handleRate(rating) {
     if (!isAuthenticated || rateMutation.isPending) return
     const isSame = currentRating === rating
+    if (rating === 'like') setLikeAnimKey((k) => k + 1)
+    else setDislikeAnimKey((k) => k + 1)
     rateMutation.mutate({
       rating: isSame ? null : rating,
       previousRating: currentRating,
@@ -89,7 +95,8 @@ export function RecipeLikeDislike({ recipe }) {
         aria-pressed={isLiked}
       >
         <motion.span
-          animate={isLiked ? { scale: [1, 0.85, 1.15, 1] } : { scale: 1 }}
+          key={likeAnimKey}
+          animate={{ scale: [1, 0.85, 1.15, 1] }}
           transition={springConfig}
         >
           <ThumbsUpIcon filled={isLiked} />
@@ -112,7 +119,8 @@ export function RecipeLikeDislike({ recipe }) {
         aria-pressed={isDisliked}
       >
         <motion.span
-          animate={isDisliked ? { scale: [1, 0.85, 1.15, 1] } : { scale: 1 }}
+          key={dislikeAnimKey}
+          animate={{ scale: [1, 0.85, 1.15, 1] }}
           transition={springConfig}
         >
           <ThumbsDownIcon filled={isDisliked} />
