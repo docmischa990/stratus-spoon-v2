@@ -383,8 +383,6 @@ export async function removeRecipeFromCollection({ collectionId, recipeId }) {
 
 export async function getUserRating(recipeId) {
   const userId = getCurrentUserId()
-  if (!userId || !firestoreDb) return null
-
   const ref = doc(firestoreDb, 'users', userId, 'ratings', recipeId)
   const snap = await getDoc(ref)
 
@@ -394,8 +392,6 @@ export async function getUserRating(recipeId) {
 
 export async function rateRecipe({ recipeId, rating, previousRating }) {
   const userId = getCurrentUserId()
-  if (!userId || !firestoreDb) return
-
   const ratingRef = doc(firestoreDb, 'users', userId, 'ratings', recipeId)
   const behaviourRef = doc(firestoreDb, 'users', userId, 'behaviour')
 
@@ -425,8 +421,6 @@ export async function rateRecipe({ recipeId, rating, previousRating }) {
 
 export async function removeRating({ recipeId, previousRating }) {
   const userId = getCurrentUserId()
-  if (!userId || !firestoreDb) return
-
   const ratingRef = doc(firestoreDb, 'users', userId, 'ratings', recipeId)
   await deleteDoc(ratingRef)
 
