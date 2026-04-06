@@ -26,6 +26,82 @@ Reason:
 Commit Hash:
 
 ---
+Timestamp: 2026-04-07T00:00:00Z
+Agent: Claude (claude-sonnet-4-6)
+
+Action:
+feat — Smart Pantry → Recipe Generator
+
+Files Modified:
+- api/src/recipes/pantryRecipes.js (created)
+- api/src/recipes/spoonacular.js (added exports)
+- api/index.js (registered generatePantryRecipes callable + auth guard)
+- firestore.rules (added pantry subcollection rules)
+- src/services/pantry/pantryService.js (created)
+- src/services/pantry/pantryRecipeService.js (created)
+- src/hooks/usePantry.js (created)
+- src/hooks/usePantryRecipes.js (created)
+- src/components/pantry/PantryInput.jsx (created)
+- src/components/pantry/PantryItemCard.jsx (created)
+- src/components/pantry/PantryList.jsx (created)
+- src/components/pantry/GeneratedRecipeCard.jsx (created)
+- src/views/pantry/PantryPage.jsx (created)
+- src/app/pantry/page.jsx (created)
+- src/components/layout/Navbar.jsx (added Pantry nav link)
+- src/components/layout/MobileNavDrawer.jsx (added Pantry nav link)
+
+Summary:
+Added a full Smart Pantry feature behind a protected /pantry route. Users add ingredients to a
+personal pantry stored in Firestore at users/{uid}/pantry. Ingredients are auto-categorised via
+keyword mapping into 7 categories (Meat & Seafood, Dairy, Vegetables, Fruits, Grains & Pasta,
+Spices & Condiments, Canned & Pantry). A new Firebase callable generatePantryRecipes calls
+Spoonacular's /findByIngredients endpoint for up to 5 recipe summaries, then fetches full recipe
+details in parallel, merging usedIngredientCount and missedIngredientCount metadata onto each
+result. Users can select a generated recipe to trigger ingredient deduction — matching pantry items
+have their quantity decremented, and items reaching zero are deleted. Frontend follows the
+project's service → hook → view architecture using TanStack Query v5 with optimistic delete for
+pantry items. Auth guard added to the callable to prevent unauthenticated Spoonacular quota burn.
+Ingredient input is sanitised before being sent to the API.
+
+Reason:
+Users had no way to discover recipes based on what they already have. This closes the "what can
+I cook tonight?" gap and adds pantry data that can inform the recommendation engine in future.
+
+Commit Hash:
+5076c1d (backend callable), f33e24f (Firestore rules), 599509b (pantryService),
+a97f6ad (pantryRecipeService), 3178d6f (usePantry), 002ca2f (usePantryRecipes),
+2f272d4–8acff67 (components), babab71 (PantryPage), 60916df (route), e6e7f16 (nav),
+fb6d438 (fixes)
+
+---
+Timestamp: 2026-04-07T00:00:00Z
+Agent: Claude (claude-sonnet-4-6)
+
+Action:
+docs — Update README.md to reflect current project state
+
+Files Modified:
+- README.md
+
+Summary:
+Rewrote README.md to accurately reflect the project as it stands after the Next.js migration and
+all subsequent feature work. Corrected the tech stack (Next.js 16 App Router, React 19, TanStack
+Query v5, Zustand, Framer Motion, Firebase Functions and Analytics — replacing the outdated Vite /
+React Router / no-analytics description). Moved ratings, analytics, behaviour tracking, and smart
+recommendations from "Planned Features" into documented implemented features with implementation
+detail. Updated the project structure to reflect the actual src/app/ + src/views/ layout.
+Improved the dev setup section with the --webpack flag explanation and .env.local variable
+reference. Removed all future-tense language for shipped features.
+
+Reason:
+The README still described the project as a Vite/React Router app with most features planned.
+The project has since migrated to Next.js App Router and shipped multiple significant systems
+(ratings, analytics, behaviour tracking, recommendation engine). The README is the primary
+entry point for understanding the project and was materially misleading.
+
+Commit Hash:
+
+---
 Timestamp: 2026-04-06T00:00:00Z
 Agent: Claude (claude-sonnet-4-6)
 
