@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useAuth } from '@/hooks/useAuth'
+import { useAuth } from '@/context/useAuth'
 import {
   generateRecipesFromPantry,
   computeDeductions,

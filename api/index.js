@@ -58,6 +58,9 @@ exports.getExternalRecipe = onCall({secrets: ["SPOONACULAR_API_KEY"]}, async (re
 exports.generatePantryRecipes = onCall(
   { secrets: ["SPOONACULAR_API_KEY"] },
   async (request) => {
+    if (!request.auth?.uid) {
+      throw new HttpsError("unauthenticated", "You must be signed in to generate pantry recipes.");
+    }
     const ingredients = request.data?.ingredients;
     if (!Array.isArray(ingredients) || ingredients.length === 0) {
       throw new HttpsError("invalid-argument", "ingredients must be a non-empty array.");
