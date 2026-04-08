@@ -6,6 +6,7 @@ import { NotesSection } from '@/components/recipes/NotesSection'
 import { RecipeHero } from '@/components/recipes/RecipeHero'
 import { StepList } from '@/components/recipes/StepList'
 import { CommentSection } from '@/components/social/CommentSection'
+import { ShareButton } from '@/components/social/ShareButton'
 import { PageSection } from '@/components/ui/PageSection'
 import { useAuth } from '@/context/useAuth'
 import { useRecipe } from '@/hooks/useRecipes'
@@ -73,7 +74,10 @@ export function RecipeDetailsPage() {
     <PageSection className="pt-10 md:pt-14">
       <div className="container space-y-10">
         <RecipeHero recipe={recipe} />
-        {recipe.ownerId === user?.uid ? <OwnerRecipeActions recipeId={recipe.id} /> : null}
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          {recipe.ownerId === user?.uid ? <OwnerRecipeActions recipeId={recipe.id} /> : <div />}
+          <ShareButton recipeId={recipe.id} title={recipe.title} />
+        </div>
         <div className="grid gap-8 lg:grid-cols-[320px_minmax(0,1fr)]">
           <div className="lg:sticky lg:top-28 lg:self-start">
             <IngredientList ingredients={recipe.ingredients} />
