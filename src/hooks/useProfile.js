@@ -9,6 +9,7 @@ import {
   getCurrentProfile,
   updateCurrentPreferences,
   updateCurrentProfile,
+  updateUsername,
 } from '@/services/profiles/profileService'
 
 export function useProfile() {
@@ -47,6 +48,19 @@ export function useUpdatePreferencesMutation() {
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] })
       queryClient.invalidateQueries({ queryKey: ['recommendations'] })
+    },
+  })
+}
+
+export function useUpdateUsernameMutation() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (newUsername) => updateUsername(newUsername),
+    onSuccess: (profile) => {
+      queryClient.setQueryData(['profile'], profile)
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['profile'] })
     },
   })
 }

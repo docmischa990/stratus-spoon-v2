@@ -10,6 +10,7 @@ import {
   useProfile,
   useUpdatePreferencesMutation,
   useUpdateProfileMutation,
+  useUpdateUsernameMutation,
 } from '@/hooks/useProfile'
 
 const PREFERENCE_OPTIONS = [
@@ -26,12 +27,18 @@ export function ProfilePage() {
   const { data: profile, isLoading, isError } = useProfile()
   const updateProfile = useUpdateProfileMutation()
   const updatePreferences = useUpdatePreferencesMutation()
+  const updateUsernameM = useUpdateUsernameMutation()
   const changePassword = useChangePasswordMutation()
   const deleteAccount = useDeleteAccountMutation()
 
   const [displayName, setDisplayName] = useState(null)
   const [bio, setBio] = useState(null)
   const [profileMessage, setProfileMessage] = useState('')
+
+  const [usernameInput, setUsernameInput] = useState(null)
+  const [usernameMessage, setUsernameMessage] = useState('')
+
+  const currentUsername = usernameInput ?? profile?.username ?? ''
 
   const [preferenceMessage, setPreferenceMessage] = useState('')
 
@@ -84,6 +91,17 @@ export function ProfilePage() {
       setProfileMessage('Profile updated.')
     } catch (error) {
       setProfileMessage(error.message || 'Unable to update your profile.')
+    }
+  }
+
+  async function handleUsernameSubmit(event) {
+    event.preventDefault()
+    setUsernameMessage('')
+    try {
+      await updateUsernameM.mutateAsync(currentUsername)
+      setUsernameMessage('Username updated.')
+    } catch (error) {
+      setUsernameMessage(error.message || 'Unable to update username.')
     }
   }
 
@@ -205,6 +223,32 @@ export function ProfilePage() {
                 </div>
               </section>
             </div>
+
+            <section className="card-base p-6">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Username</p>
+              <form className="mt-4 space-y-4" onSubmit={handleUsernameSubmit}>
+                <label className="space-y-2">
+                  <span className="text-sm font-semibold text-primary-dark">Username</span>
+                  <div className="flex items-center gap-1">
+                    <span className="text-text-muted">@</span>
+                    <input
+                      className="input-base flex-1"
+                      value={currentUsername}
+                      onChange={(event) => setUsernameInput(event.target.value)}
+                      placeholder="your_username"
+                      minLength={3}
+                      maxLength={30}
+                      pattern="[a-z0-9_]+"
+                    />
+                  </div>
+                  <p className="text-xs text-text-muted">Letters, numbers, and underscores only. Min 3 characters.</p>
+                </label>
+                {usernameMessage ? <p className="text-sm text-text-muted">{usernameMessage}</p> : null}
+                <Button type="submit" disabled={updateUsernameM.isPending}>
+                  {updateUsernameM.isPending ? 'Saving…' : 'Save username'}
+                </Button>
+              </form>
+            </section>
 
             <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
               <section className="card-base p-6">

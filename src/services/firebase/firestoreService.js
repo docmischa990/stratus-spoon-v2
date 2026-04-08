@@ -9,8 +9,17 @@ import {
   serverTimestamp,
   setDoc,
   where,
+  writeBatch,
 } from 'firebase/firestore'
 import { firestoreDb } from '@/lib/firebase/firebase'
+
+function generateDefaultUsername(displayName, uid) {
+  const base = (displayName || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '')
+    .slice(0, 20) || 'user'
+  return `${base}${uid.slice(0, 6)}`
+}
 
 function assertFirestoreConfigured() {
   if (!firestoreDb) {
@@ -31,9 +40,15 @@ export async function createUserProfile(user, profileOverrides = {}) {
     displayName: profileOverrides.displayName ?? user.displayName ?? existingData?.displayName ?? '',
     photoURL: profileOverrides.photoURL ?? user.photoURL ?? existingData?.photoURL ?? null,
     bio: profileOverrides.bio ?? existingData?.bio ?? '',
+    username: existingData?.username ?? generateDefaultUsername(
+      profileOverrides.displayName ?? user.displayName,
+      user.uid,
+    ),
     recipeCount: profileOverrides.recipeCount ?? existingData?.recipeCount ?? 0,
     favoriteRecipeCount: profileOverrides.favoriteRecipeCount ?? existingData?.favoriteRecipeCount ?? 0,
     collectionCount: profileOverrides.collectionCount ?? existingData?.collectionCount ?? 0,
+    followerCount: existingData?.followerCount ?? 0,
+    followingCount: existingData?.followingCount ?? 0,
     preferences: profileOverrides.preferences ?? existingData?.preferences ?? {
       dietaryTags: [],
       theme: null,
@@ -52,7 +67,9 @@ export async function createUserProfile(user, profileOverrides = {}) {
     return existingData
   }
 
-  await setDoc(
+  const batch = writeBatch(firestoreDb)
+
+  batch.set(
     userRef,
     {
       ...profileData,
@@ -60,6 +77,14 @@ export async function createUserProfile(user, profileOverrides = {}) {
     },
     { merge: true },
   )
+
+  // Write username lookup doc (only on new profile creation)
+  if (!existingData) {
+    const usernameRef = doc(firestoreDb, 'usernames', profileData.username)
+    batch.set(usernameRef, { uid: user.uid, createdAt: serverTimestamp() })
+  }
+
+  await batch.commit()
 
   const nextSnapshot = await getDoc(userRef)
   return nextSnapshot.data()

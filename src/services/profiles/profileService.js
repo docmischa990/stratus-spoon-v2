@@ -9,6 +9,7 @@ import {
   serverTimestamp,
   updateDoc,
   where,
+  writeBatch,
 } from 'firebase/firestore'
 import { firebaseAuth, firestoreDb } from '@/lib/firebase'
 
@@ -61,6 +62,9 @@ export async function getCurrentProfile() {
         displayName: profile.displayName || currentUser.displayName || 'Stratus Spoon User',
         email: profile.email || currentUser.email || '',
         bio: profile.bio || 'Complete your profile to personalize your cookbook workspace.',
+        username: profile.username || null,
+        followerCount: profile.followerCount ?? 0,
+        followingCount: profile.followingCount ?? 0,
         preferences: {
           dietaryTags: Array.isArray(profile.preferences?.dietaryTags)
             ? profile.preferences.dietaryTags
@@ -121,6 +125,49 @@ export async function updateCurrentPreferences(preferences) {
     updatedAt: serverTimestamp(),
   })
 
+  return getCurrentProfile()
+}
+
+export async function isUsernameAvailable(username) {
+  const usernameRef = doc(firestoreDb, 'usernames', username.toLowerCase())
+  const snap = await getDoc(usernameRef)
+  return !snap.exists()
+}
+
+export async function updateUsername(newUsername) {
+  const currentUser = requireCurrentUser()
+  const clean = newUsername.toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 30)
+
+  if (!clean || clean.length < 3) {
+    throw new Error('Username must be at least 3 characters and contain only letters, numbers, or underscores.')
+  }
+
+  const available = await isUsernameAvailable(clean)
+  if (!available) {
+    throw new Error('That username is already taken. Please choose a different one.')
+  }
+
+  const userRef = doc(firestoreDb, 'users', currentUser.uid)
+  const userSnap = await getDoc(userRef)
+  const oldUsername = userSnap.data()?.username
+
+  const batch = writeBatch(firestoreDb)
+
+  // Remove old username lookup if it exists
+  if (oldUsername) {
+    batch.delete(doc(firestoreDb, 'usernames', oldUsername))
+  }
+
+  // Create new username lookup
+  batch.set(doc(firestoreDb, 'usernames', clean), {
+    uid: currentUser.uid,
+    createdAt: serverTimestamp(),
+  })
+
+  // Update user profile
+  batch.update(userRef, { username: clean, updatedAt: serverTimestamp() })
+
+  await batch.commit()
   return getCurrentProfile()
 }
 
