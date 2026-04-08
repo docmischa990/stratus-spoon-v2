@@ -60,6 +60,8 @@ export function useFollowMutation(targetUid) {
       queryClient.invalidateQueries({ queryKey: ['publicProfile', targetUid] })
       queryClient.invalidateQueries({ queryKey: ['followers', targetUid] })
       queryClient.invalidateQueries({ queryKey: ['following', user?.uid] })
+      queryClient.invalidateQueries({ queryKey: ['followerProfiles', targetUid] })
+      queryClient.invalidateQueries({ queryKey: ['followingProfiles', user?.uid] })
     },
   })
 }
@@ -82,6 +84,8 @@ export function useUnfollowMutation(targetUid) {
       queryClient.invalidateQueries({ queryKey: ['publicProfile', targetUid] })
       queryClient.invalidateQueries({ queryKey: ['followers', targetUid] })
       queryClient.invalidateQueries({ queryKey: ['following', user?.uid] })
+      queryClient.invalidateQueries({ queryKey: ['followerProfiles', targetUid] })
+      queryClient.invalidateQueries({ queryKey: ['followingProfiles', user?.uid] })
     },
   })
 }
