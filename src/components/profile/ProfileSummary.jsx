@@ -1,6 +1,12 @@
+'use client'
+
+import { useState } from 'react'
 import { StatCard } from '@/components/ui/StatCard'
+import { FollowListModal } from '@/components/social/FollowListModal'
 
 export function ProfileSummary({ profile }) {
+  const [modal, setModal] = useState(null)
+
   return (
     <section className="space-y-4">
       <div className="card-base p-6">
@@ -21,13 +27,33 @@ export function ProfileSummary({ profile }) {
         </div>
         <p className="mt-5 max-w-prose text-sm leading-7 text-text-muted">{profile.bio}</p>
       </div>
+
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <StatCard label="Followers" value={profile.followerCount ?? 0} />
-        <StatCard label="Following" value={profile.followingCount ?? 0} />
+        <button
+          onClick={() => setModal('followers')}
+          className="cursor-pointer text-left transition-opacity hover:opacity-80"
+        >
+          <StatCard label="Followers" value={profile.followerCount ?? 0} />
+        </button>
+        <button
+          onClick={() => setModal('following')}
+          className="cursor-pointer text-left transition-opacity hover:opacity-80"
+        >
+          <StatCard label="Following" value={profile.followingCount ?? 0} />
+        </button>
         <StatCard label="Created recipes" value={profile.stats.recipes} />
         <StatCard label="Favorites" value={profile.stats.favorites} />
         <StatCard label="Collections" value={profile.stats.collections} />
       </div>
+
+      <FollowListModal
+        uid={profile.uid}
+        initialTab={modal ?? 'following'}
+        followerCount={profile.followerCount ?? 0}
+        followingCount={profile.followingCount ?? 0}
+        isOpen={modal !== null}
+        onClose={() => setModal(null)}
+      />
     </section>
   )
 }
