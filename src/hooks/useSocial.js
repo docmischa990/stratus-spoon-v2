@@ -85,3 +85,27 @@ export function useUnfollowMutation(targetUid) {
     },
   })
 }
+
+export function useFollowerProfiles(uid) {
+  return useQuery({
+    queryKey: ['followerProfiles', uid],
+    queryFn: async () => {
+      const uids = await getFollowers(uid)
+      const profiles = await Promise.all(uids.map((id) => getPublicProfile(id)))
+      return profiles.filter(Boolean)
+    },
+    enabled: Boolean(uid),
+  })
+}
+
+export function useFollowingProfiles(uid) {
+  return useQuery({
+    queryKey: ['followingProfiles', uid],
+    queryFn: async () => {
+      const uids = await getFollowing(uid)
+      const profiles = await Promise.all(uids.map((id) => getPublicProfile(id)))
+      return profiles.filter(Boolean)
+    },
+    enabled: Boolean(uid),
+  })
+}
