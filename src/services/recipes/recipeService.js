@@ -386,7 +386,7 @@ function buildRecipePayload({ formValues, ownerId }) {
     tags,
     sourceType: 'internal',
     ownerId,
-    visibility: 'public',
+    visibility: formValues.visibility ?? 'public',
   }
 }
 
@@ -400,6 +400,7 @@ export function getRecipeFormDefaults(recipe) {
       ingredients: '',
       steps: '',
       notes: '',
+      visibility: 'public',
     }
   }
 
@@ -411,6 +412,7 @@ export function getRecipeFormDefaults(recipe) {
     ingredients: Array.isArray(recipe.ingredients) ? recipe.ingredients.join('\n') : '',
     steps: Array.isArray(recipe.steps) ? recipe.steps.join('\n') : '',
     notes: recipe.notes ?? '',
+    visibility: recipe.visibility ?? 'public',
   }
 }
 

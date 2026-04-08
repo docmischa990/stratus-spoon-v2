@@ -81,6 +81,17 @@ export function RecipeEditorPanel({
             onChange={(event) => onChange('notes', event.target.value)}
           />
         </label>
+        <label className="space-y-2 md:col-span-2">
+          <span className="text-sm font-semibold text-primary-dark">Visibility</span>
+          <select
+            className="input-base"
+            value={formValues.visibility ?? 'public'}
+            onChange={(event) => onChange('visibility', event.target.value)}
+          >
+            <option value="public">Public — anyone can discover this recipe</option>
+            <option value="private">Private — only you can see this</option>
+          </select>
+        </label>
         {errorMessage ? <p className="md:col-span-2 text-sm font-medium text-danger">{errorMessage}</p> : null}
         <div className="md:col-span-2 flex justify-end">
           <Button type="submit" disabled={isSubmitting}>
