@@ -85,10 +85,11 @@ export function FollowListModal({ uid, initialTab, followerCount, followingCount
   const [tab, setTab] = useState(initialTab)
 
   useEffect(() => {
+    if (!isOpen) return
     function onKey(e) { if (e.key === 'Escape') onClose() }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
+  }, [isOpen, onClose])
 
   return (
     <AnimatePresence>
