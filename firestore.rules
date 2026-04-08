@@ -67,6 +67,15 @@ service cloud.firestore {
         && request.resource.data.ownerId == request.auth.uid
         && request.resource.data.sourceType == resource.data.sourceType;
       allow delete: if isOwner(resource.data.ownerId);
+
+      match /comments/{commentId} {
+        allow read: if true;
+        allow create: if isSignedIn()
+          && request.resource.data.userId == request.auth.uid
+          && request.resource.data.text.size() <= 500;
+        allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+        allow update: if false;
+      }
     }
 
     // recipeStats: public read, authenticated write (increments only).
