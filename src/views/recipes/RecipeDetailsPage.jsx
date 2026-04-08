@@ -5,6 +5,7 @@ import { IngredientList } from '@/components/recipes/IngredientList'
 import { NotesSection } from '@/components/recipes/NotesSection'
 import { RecipeHero } from '@/components/recipes/RecipeHero'
 import { StepList } from '@/components/recipes/StepList'
+import { CommentSection } from '@/components/social/CommentSection'
 import { PageSection } from '@/components/ui/PageSection'
 import { useAuth } from '@/context/useAuth'
 import { useRecipe } from '@/hooks/useRecipes'
@@ -80,6 +81,7 @@ export function RecipeDetailsPage() {
           <div className="space-y-8">
             <StepList steps={recipe.steps} />
             <NotesSection notes={recipe.notes} />
+            <CommentSection recipeId={recipe.id} />
           </div>
         </div>
       </div>
