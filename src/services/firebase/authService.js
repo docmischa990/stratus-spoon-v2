@@ -15,6 +15,7 @@ import {
   updateProfile,
 } from 'firebase/auth'
 import { createUserProfile } from '@/services/firebase/firestoreService'
+import { autoFollowSpoonies, ensureSpooniesAccount } from '@/services/social/spooniesService'
 import { firebaseAuth, isFirebaseConfigured } from '@/lib/firebase/firebase'
 
 let phoneRecaptchaVerifier = null
@@ -60,7 +61,10 @@ export async function ensureUserProfile(user, profileOverrides = {}) {
   }
 
   try {
-    return await createUserProfile(user, profileOverrides)
+    const profile = await createUserProfile(user, profileOverrides)
+    // Ensure Spoonies account exists and auto-follow it (no-op if already following)
+    void ensureSpooniesAccount().then(() => autoFollowSpoonies(user.uid)).catch(() => {})
+    return profile
   } catch (error) {
     console.warn('Unable to sync Firebase user profile.', error)
     return null
