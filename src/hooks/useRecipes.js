@@ -7,6 +7,7 @@ import {
   listRecipes,
   updateRecipe,
 } from '@/services/recipes/recipeService'
+import { fetchRecipes } from '@/services/firebase/firestoreService'
 import { trackRecipeCreated, trackRecipeImported } from '@/services/analytics/analyticsService'
 import { recordImport } from '@/services/behaviour/behaviourService'
 
@@ -230,6 +231,14 @@ export function useDeleteRecipeMutation() {
       queryClient.invalidateQueries({ queryKey: ['recommendations'] })
       queryClient.removeQueries({ queryKey: ['recipes', recipeId] })
     },
+  })
+}
+
+export function useRecipesByOwner(ownerId) {
+  return useQuery({
+    queryKey: ['recipes', 'owner', ownerId],
+    queryFn: () => fetchRecipes({ ownerId, sourceType: 'internal', visibility: 'public' }),
+    enabled: Boolean(ownerId),
   })
 }
 
