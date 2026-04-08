@@ -40,9 +40,9 @@ function AvatarCard({ profile, onClose }) {
   )
 }
 
-function UserGrid({ uid, tab, onClose }) {
-  const followersQuery = useFollowerProfiles(tab === 'followers' ? uid : null)
-  const followingQuery = useFollowingProfiles(tab === 'following' ? uid : null)
+function UserGrid({ uid, tab, isOpen, onClose }) {
+  const followersQuery = useFollowerProfiles(isOpen ? uid : null)
+  const followingQuery = useFollowingProfiles(isOpen ? uid : null)
 
   const { data: profiles, isLoading, isError } =
     tab === 'followers' ? followersQuery : followingQuery
@@ -157,7 +157,7 @@ export function FollowListModal({ uid, initialTab, followerCount, followingCount
 
             {/* Grid */}
             <div className="max-h-80 overflow-y-auto">
-              <UserGrid uid={uid} tab={tab} onClose={onClose} />
+              <UserGrid uid={uid} tab={tab} isOpen={isOpen} onClose={onClose} />
             </div>
           </motion.div>
         </>
