@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { AnimatePresence, motion } from 'framer-motion'
+
+const MotionDiv = motion.div
 import { useFollowerProfiles, useFollowingProfiles } from '@/hooks/useSocial'
 
 function getInitials(displayName) {
@@ -91,15 +93,11 @@ export function FollowListModal({ uid, initialTab, followerCount, followingCount
     return () => window.removeEventListener('keydown', onKey)
   }, [isOpen, onClose])
 
-  useEffect(() => {
-    if (isOpen && initialTab) setTab(initialTab)
-  }, [isOpen, initialTab])
-
   return (
     <AnimatePresence>
       {isOpen && (
         <>
-          <motion.div
+          <MotionDiv
             key="backdrop"
             className="fixed inset-0 z-40 bg-black/50"
             initial={{ opacity: 0 }}
@@ -107,7 +105,7 @@ export function FollowListModal({ uid, initialTab, followerCount, followingCount
             exit={{ opacity: 0 }}
             onClick={onClose}
           />
-          <motion.div
+          <MotionDiv
             key="panel"
             className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-md rounded-t-2xl bg-surface p-6 shadow-xl sm:inset-x-auto sm:left-1/2 sm:top-1/2 sm:w-full sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-2xl"
             initial={{ y: '100%', opacity: 0 }}
@@ -159,7 +157,7 @@ export function FollowListModal({ uid, initialTab, followerCount, followingCount
             <div className="max-h-80 overflow-y-auto">
               <UserGrid uid={uid} tab={tab} isOpen={isOpen} onClose={onClose} />
             </div>
-          </motion.div>
+          </MotionDiv>
         </>
       )}
     </AnimatePresence>

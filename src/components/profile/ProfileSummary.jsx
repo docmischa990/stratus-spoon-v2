@@ -47,6 +47,7 @@ export function ProfileSummary({ profile }) {
       </div>
 
       <FollowListModal
+        key={modal}
         uid={profile.uid}
         initialTab={modal ?? 'following'}
         followerCount={profile.followerCount ?? 0}
