@@ -4,6 +4,135 @@
 
 This document records **all actions performed by AI agents** in this repository.
 
+---
+Timestamp: 2026-04-08T14:00:00Z
+Agent: Claude (claude-sonnet-4-6)
+
+Action:
+feat — Followers/Following modal on profile page
+
+Files Modified:
+- src/hooks/useSocial.js (added useFollowerProfiles, useFollowingProfiles; added cache invalidation to useFollowMutation and useUnfollowMutation)
+- src/components/social/FollowListModal.jsx (created: animated modal with tab switcher, 2-column avatar grid, Escape key handler, ARIA dialog semantics)
+- src/components/profile/ProfileSummary.jsx (Followers/Following stat cards made clickable, FollowListModal wired in)
+
+Summary:
+Followers and Following stat cards on the profile page are now clickable. Clicking either opens
+a Framer Motion modal with a tab switcher (Following / Followers) and a 2-column avatar card grid.
+Each avatar card navigates to that user's public profile at /user/[uid] and closes the modal.
+useFollowerProfiles and useFollowingProfiles hooks batch-fetch profile data (displayName, username)
+for each UID returned by the existing getFollowers/getFollowing services. Cache invalidation added
+to follow/unfollow mutations so the modal reflects live data. Modal has animated backdrop + spring
+panel, Escape key close, aria-modal dialog semantics, loading/error/empty states.
+
+Reason:
+The profile page showed opaque follower/following counts with no way to see who was being followed
+or followed by. Users could not discover the Spoonies curator account they auto-follow on signup,
+nor navigate to any follower's profile.
+
+Commit Hash:
+2427b0e (useFollowerProfiles/useFollowingProfiles hooks)
+48e5c65 (cache invalidation fix)
+717e19b (FollowListModal component)
+df8a82e (AnimatePresence fix, getInitials, Escape key, ARIA)
+85a6f98 (Escape key isOpen guard)
+0661253 (ProfileSummary wiring)
+d3d7bcb (initialTab sync fix)
+
+---
+Timestamp: 2026-04-08T12:00:00Z
+Agent: Claude (claude-sonnet-4-6)
+
+Action:
+fix — Firestore rules: allow Spoonies account creation by any signed-in user
+
+Files Modified:
+- firestore.rules (changed /users/{userId} create rule to also allow userId == 'spoonies')
+
+Summary:
+The Spoonies curator doc (users/spoonies) could never be created because the create rule was isOwner(userId), which requires auth.uid == 'spoonies' — impossible for any real user. Extended the rule to allow create when isSignedIn() && userId == 'spoonies'. Rules deployed via firebase deploy --only firestore:rules. This unblocks autoFollowSpoonies from silently failing on every login.
+
+Reason:
+Users were not seeing Spoonies in their following list after login despite auto-follow logic being in place. Root cause: Spoonies doc creation was always blocked by security rules, so the account never existed, causing the subsequent batch.update to fail too.
+
+Commit Hash:
+(pending user commit command)
+
+---
+Timestamp: 2026-04-08T11:00:00Z
+Agent: Claude (claude-sonnet-4-6)
+
+Action:
+feat — Profile page: display social data (followers, following, @username)
+
+Files Modified:
+- src/components/profile/ProfileSummary.jsx (added Followers + Following StatCards, @username display, grid expanded to 5 columns)
+
+Summary:
+ProfileSummary now renders followerCount and followingCount from the profile object (already returned by getCurrentProfile after the social MVP). Added @username display below the display name. StatCard grid changed from lg:grid-cols-3 to lg:grid-cols-5 to accommodate 5 stat cards.
+
+Reason:
+After the social MVP, follower/following data existed in Firestore and was returned by the profile query, but ProfileSummary was not rendering it. User reported the profile page was missing social data.
+
+Commit Hash:
+b9726d4
+
+---
+Timestamp: 2026-04-08T00:00:00Z
+Agent: Claude (claude-sonnet-4-6)
+
+Action:
+feat — Social Features MVP (Tasks 1–10)
+
+Plan approved by user. Implementation in progress task by task.
+
+---
+Timestamp: 2026-04-08T00:01:00Z
+Agent: Claude (claude-sonnet-4-6)
+
+Action:
+feat — Social Features MVP (Tasks 1–9)
+
+Files Modified:
+- src/services/firebase/firestoreService.js (username system: generateDefaultUsername, writeBatch for usernames/ lookup)
+- src/services/profiles/profileService.js (isUsernameAvailable, updateUsername, extended getCurrentProfile)
+- src/hooks/useProfile.js (useUpdateUsernameMutation)
+- src/views/profile/ProfilePage.jsx (username input section)
+- src/services/social/followService.js (created: followUser, unfollowUser, isFollowing, getPublicProfile, getFollowers, getFollowing)
+- src/hooks/useSocial.js (created: usePublicProfile, useIsFollowing, useFollowers, useFollowing, useFollowMutation, useUnfollowMutation)
+- src/components/social/FollowButton.jsx (created: optimistic follow/unfollow toggle)
+- src/views/user/PublicProfilePage.jsx (created: public profile with follower counts and recipe grid)
+- src/app/user/[uid]/page.jsx (created: Next.js route for /user/:uid)
+- src/hooks/useRecipes.js (added useRecipesByOwner)
+- src/services/recipes/recipeService.js (visibility field now caller-controlled, not hardcoded 'public')
+- src/components/editor/RecipeEditorPanel.jsx (added visibility dropdown)
+- src/services/social/commentService.js (created: getComments, addComment, deleteComment)
+- src/hooks/useComments.js (created: useComments, useAddComment, useDeleteComment)
+- src/components/social/CommentItem.jsx (created: single comment row with delete)
+- src/components/social/CommentSection.jsx (created: comment list + input form)
+- src/views/recipes/RecipeDetailsPage.jsx (wired CommentSection and ShareButton)
+- src/services/social/spooniesService.js (created: ensureSpooniesAccount, autoFollowSpoonies)
+- src/services/firebase/authService.js (auto-follow Spoonies in ensureUserProfile)
+- src/components/social/ShareButton.jsx (created: WhatsApp share + clipboard copy)
+- firestore.rules (usernames/ rules, public user reads, followers/following subcollection rules, comments subcollection rules)
+
+Summary:
+Full Social Features MVP implemented. Usernames: auto-generated on profile creation, unique enforced via usernames/ lookup collection, editable in /profile. Follow system: batched writes to followers/following subcollections with counter increments/decrements, optimistic UI via TanStack Query. Public profiles at /user/:uid show displayName, @username, bio, follower/following/recipe counts, and a grid of their public recipes. Recipe privacy: visibility field now accepts 'private' or 'public' — UI dropdown added to create/edit form. Comments: stored at recipes/{recipeId}/comments, 500 char limit, authenticated users can post and delete their own. Spoonies curator account: special user doc seeded on first login and auto-followed by every user. Share links: WhatsApp deep link and clipboard copy wired into recipe detail page.
+
+Reason:
+No social layer existed. This MVP adds follow, comments, public profiles, recipe privacy, Spoonies, and sharing — feeding engagement, retention, and future recommendation signals.
+
+Commit Hashes:
+63e2b0b (Task 1: username system)
+6492411 (Task 2: follow service + hooks + rules)
+2b346f2 (Task 3: FollowButton)
+973c914 (Task 4: public profile page)
+aee3d45 (Task 5: recipe privacy)
+3047de0 (Task 6: comment service + hooks + rules)
+8346a45 (Task 7: CommentSection + CommentItem)
+b7f4d9e (Task 8: Spoonies account)
+90e11a8 (Task 9: ShareButton)
+
 It ensures:
 
 - development transparency
