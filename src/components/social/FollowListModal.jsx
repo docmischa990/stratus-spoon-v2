@@ -91,6 +91,10 @@ export function FollowListModal({ uid, initialTab, followerCount, followingCount
     return () => window.removeEventListener('keydown', onKey)
   }, [isOpen, onClose])
 
+  useEffect(() => {
+    if (isOpen && initialTab) setTab(initialTab)
+  }, [isOpen, initialTab])
+
   return (
     <AnimatePresence>
       {isOpen && (
