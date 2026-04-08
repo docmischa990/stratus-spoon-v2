@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useFollowerProfiles, useFollowingProfiles } from '@/hooks/useSocial'
@@ -8,7 +8,7 @@ import { useFollowerProfiles, useFollowingProfiles } from '@/hooks/useSocial'
 function getInitials(displayName) {
   return displayName
     .split(' ')
-    .map((part) => part[0])
+    .map((part) => part[0] ?? '')
     .join('')
     .slice(0, 2)
     .toUpperCase()
@@ -81,69 +81,82 @@ function UserGrid({ uid, tab, onClose }) {
   )
 }
 
-export function FollowListModal({ uid, initialTab, followerCount, followingCount, onClose }) {
+export function FollowListModal({ uid, initialTab, followerCount, followingCount, onClose, isOpen }) {
   const [tab, setTab] = useState(initialTab)
+
+  useEffect(() => {
+    function onKey(e) { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
 
   return (
     <AnimatePresence>
-      <motion.div
-        key="backdrop"
-        className="fixed inset-0 z-40 bg-black/50"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        onClick={onClose}
-      />
-      <motion.div
-        key="panel"
-        className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-md rounded-t-2xl bg-surface p-6 shadow-xl sm:inset-x-auto sm:left-1/2 sm:top-1/2 sm:w-full sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-2xl"
-        initial={{ y: '100%', opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        exit={{ y: '100%', opacity: 0 }}
-        transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-base font-semibold">Connections</h2>
-          <button
+      {isOpen && (
+        <>
+          <motion.div
+            key="backdrop"
+            className="fixed inset-0 z-40 bg-black/50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             onClick={onClose}
-            className="text-xl leading-none text-text-muted transition-opacity hover:opacity-70"
-            aria-label="Close"
+          />
+          <motion.div
+            key="panel"
+            className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-md rounded-t-2xl bg-surface p-6 shadow-xl sm:inset-x-auto sm:left-1/2 sm:top-1/2 sm:w-full sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-2xl"
+            initial={{ y: '100%', opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: '100%', opacity: 0 }}
+            transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="follow-modal-title"
           >
-            ✕
-          </button>
-        </div>
+            {/* Header */}
+            <div className="mb-4 flex items-center justify-between">
+              <h2 id="follow-modal-title" className="text-base font-semibold">Connections</h2>
+              <button
+                onClick={onClose}
+                className="text-xl leading-none text-text-muted transition-opacity hover:opacity-70"
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            </div>
 
-        {/* Tabs */}
-        <div className="mb-5 flex border-b border-border">
-          <button
-            className={`px-4 pb-3 text-sm font-medium transition-colors ${
-              tab === 'following'
-                ? 'border-b-2 border-primary text-primary'
-                : 'text-text-muted hover:text-foreground'
-            }`}
-            onClick={() => setTab('following')}
-          >
-            Following {followingCount}
-          </button>
-          <button
-            className={`px-4 pb-3 text-sm font-medium transition-colors ${
-              tab === 'followers'
-                ? 'border-b-2 border-primary text-primary'
-                : 'text-text-muted hover:text-foreground'
-            }`}
-            onClick={() => setTab('followers')}
-          >
-            Followers {followerCount}
-          </button>
-        </div>
+            {/* Tabs */}
+            <div className="mb-5 flex border-b border-border">
+              <button
+                className={`px-4 pb-3 text-sm font-medium transition-colors ${
+                  tab === 'following'
+                    ? 'border-b-2 border-primary text-primary'
+                    : 'text-text-muted hover:text-foreground'
+                }`}
+                onClick={() => setTab('following')}
+              >
+                Following {followingCount}
+              </button>
+              <button
+                className={`px-4 pb-3 text-sm font-medium transition-colors ${
+                  tab === 'followers'
+                    ? 'border-b-2 border-primary text-primary'
+                    : 'text-text-muted hover:text-foreground'
+                }`}
+                onClick={() => setTab('followers')}
+              >
+                Followers {followerCount}
+              </button>
+            </div>
 
-        {/* Grid */}
-        <div className="max-h-80 overflow-y-auto">
-          <UserGrid uid={uid} tab={tab} onClose={onClose} />
-        </div>
-      </motion.div>
+            {/* Grid */}
+            <div className="max-h-80 overflow-y-auto">
+              <UserGrid uid={uid} tab={tab} onClose={onClose} />
+            </div>
+          </motion.div>
+        </>
+      )}
     </AnimatePresence>
   )
 }
